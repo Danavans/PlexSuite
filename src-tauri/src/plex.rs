@@ -622,26 +622,3 @@ pub async fn upload_subtitle_to_episode(
 ) -> Result<(), String> {
     plex_post_subtitle(app, server_url, token, episode_rating_key, file_path).await
 }
-
-pub async fn fetch_episode_parts(
-    app: &AppHandle,
-    server_url: &str,
-    token: &str,
-    episode_rating_key: &str,
-) -> Result<Vec<String>, String> {
-    let value = plex_get_json(
-        app,
-        server_url,
-        token,
-        &format!("library/metadata/{}", episode_rating_key),
-        vec![("includeMedia".to_string(), "1".to_string())],
-    )
-    .await?;
-    let items = parse_metadata(&value);
-    let part_ids = items
-        .into_iter()
-        .find(|item| item.rating_key == episode_rating_key)
-        .map(|item| item.part_ids)
-        .unwrap_or_default();
-    Ok(part_ids)
-}
