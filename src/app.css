@@ -716,7 +716,7 @@ button:hover:not(:disabled) {
 .table {
   display: grid;
   gap: 8px;
-  max-height: 320px;
+  max-height: 500px;
   overflow: auto;
   padding-right: 6px;
 }
