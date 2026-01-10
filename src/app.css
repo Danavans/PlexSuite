@@ -82,6 +82,7 @@ textarea {
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
+  animation: rise 0.6s ease both;
 }
 
 .hero-right {
@@ -90,6 +91,7 @@ textarea {
   align-items: flex-end;
   text-align: right;
   gap: 10px;
+  animation: rise 0.6s ease 0.1s both;
 }
 
 .hero h1 {
@@ -131,10 +133,15 @@ textarea {
 }
 
 .tabs {
-  display: flex;
-  gap: 10px;
+  display: inline-flex;
+  gap: 8px;
   flex-wrap: wrap;
   align-items: center;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(20, 20, 22, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  animation: rise 0.6s ease 0.2s both;
 }
 
 .tabs-wrap {
@@ -143,19 +150,31 @@ textarea {
 }
 
 .tabs button {
-  border: 1px solid var(--stroke);
-  background: rgba(255, 255, 255, 0.08);
-  padding: 8px 16px;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 8px 18px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
+  color: var(--muted);
   cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
 .tabs button.active-tab {
-  border-color: rgba(228, 87, 46, 0.45);
-  background: rgba(242, 100, 48, 0.16);
-  color: var(--accent);
+  border-color: transparent;
+  background: var(--accent);
+  color: #1b0f0a;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(242, 100, 48, 0.22);
+}
+
+.tabs button:hover {
+  color: var(--ink);
+}
+
+.tabs button:active {
+  transform: translateY(0);
 }
 
 .status-pill {
@@ -860,6 +879,17 @@ button:hover:not(:disabled) {
 
 .status-bar.info {
   color: var(--muted);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 960px) {
