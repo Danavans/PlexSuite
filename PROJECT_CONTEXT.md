@@ -1,9 +1,13 @@
 # PlexTools - Project Context
 
 ## Resume rapide
-- Projet dans `D:\Medias\Divers\Tools\PlexTools\plex-tools` (Tauri + Svelte).
+- Projet dans `D:\Medias\Divers\Tools\PlexTools\PlexTools` (Tauri + Svelte).
 - Objectif: app 3-en-1 pour Plex (Trash Selector, Sub Uploader, Plexmatch Generator) avec UI en anglais.
 - Theme: look Plex Trash Selector (fond sombre global, cards sombres, texte clair, accents orange). Aucun panel clair.
+
+## Agent instructions
+- See `AGENTS.md` for operational rules and editing guidance.
+- If `AGENTS.md` conflicts with this document, follow `AGENTS.md`.
 
 ## Decisions UX principales
 - Layout unique pour tous les onglets: contenu aligne en haut, meme marges, pas de centrage vertical.
