@@ -634,12 +634,39 @@
 
 <main class="app">
   <header class="hero">
-    <div>
+    <div class="hero-left">
       <p class="badge">PlexTools</p>
       <h1 class="sr-only">PlexTools</h1>
-      <p>{tabDescription}</p>
+      <div class="tabs-wrap">
+        <div class="tabs">
+        <button
+          class:active-tab={activeTab === "trash"}
+          on:click={() => (activeTab = "trash")}
+        >
+          Trash Selector
+        </button>
+        <button
+          class:active-tab={activeTab === "subs"}
+          on:click={() => (activeTab = "subs")}
+        >
+          Sub Uploader
+        </button>
+        <button
+          class:active-tab={activeTab === "plexmatch"}
+          on:click={() => (activeTab = "plexmatch")}
+        >
+          Plexmatch Generator
+        </button>
+        <button
+          class:active-tab={activeTab === "settings"}
+          on:click={() => (activeTab = "settings")}
+        >
+          Settings
+        </button>
+        </div>
+      </div>
     </div>
-    <div class="tabs-wrap">
+    <div class="hero-right">
       <div class="status-row">
         <div class="status-pill">
           <span class={`status-dot ${isConnected ? "ok" : "down"}`}></span>
@@ -648,32 +675,7 @@
           </span>
         </div>
       </div>
-      <div class="tabs">
-      <button
-        class:active-tab={activeTab === "trash"}
-        on:click={() => (activeTab = "trash")}
-      >
-        Trash Selector
-      </button>
-      <button
-        class:active-tab={activeTab === "subs"}
-        on:click={() => (activeTab = "subs")}
-      >
-        Sub Uploader
-      </button>
-      <button
-        class:active-tab={activeTab === "plexmatch"}
-        on:click={() => (activeTab = "plexmatch")}
-      >
-        Plexmatch Generator
-      </button>
-      <button
-        class:active-tab={activeTab === "settings"}
-        on:click={() => (activeTab = "settings")}
-      >
-        Settings
-      </button>
-      </div>
+      <p>{tabDescription}</p>
     </div>
   </header>
 
