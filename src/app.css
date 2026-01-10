@@ -881,6 +881,18 @@ button:hover:not(:disabled) {
   color: var(--muted);
 }
 
+.lift-1 {
+  animation: rise 0.7s ease 0.1s both;
+}
+
+.lift-2 {
+  animation: rise 0.7s ease 0.2s both;
+}
+
+.lift-3 {
+  animation: rise 0.7s ease 0.3s both;
+}
+
 @keyframes rise {
   from {
     opacity: 0;

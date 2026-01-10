@@ -682,7 +682,7 @@
 
     {#if activeTab === "settings"}
       <section class="grid module-grid">
-        <div class="panel settings-panel">
+        <div class="panel settings-panel lift-1">
           <h2 class="section-title">Credentials</h2>
           <p class="kicker">
             Save once. The app reconnects automatically on launch.
@@ -722,7 +722,7 @@
           </button>
         </div>
       </div>
-      <div class="panel">
+      <div class="panel lift-2">
         <h2>Logs</h2>
         <div class="actions">
           <button
@@ -749,7 +749,7 @@
     </section>
     {:else if activeTab === "trash"}
       <section class="grid trash-grid">
-        <div class="panel trash-library">
+        <div class="panel trash-library lift-1">
           <h2>Library & Target</h2>
           <div class="field">
             <label for="library">TV Library</label>
@@ -835,7 +835,7 @@
           </p>
         </div>
 
-        <div class="panel trash-preview">
+        <div class="panel trash-preview lift-2">
           <h2>Preview List</h2>
           <div class="debug">
             {#if preview.count === 0}
@@ -849,7 +849,7 @@
           </div>
         </div>
 
-        <div class="panel trash-actions">
+        <div class="panel trash-actions lift-3">
           <h2>Seasons & Action</h2>
           <div class="kicker">
             Use the Season dropdown to narrow the purge scope.
@@ -891,7 +891,7 @@
       </section>
     {:else if activeTab === "subs"}
       <section class="grid subs-grid-wide">
-        <div class="panel subs-scope">
+        <div class="panel subs-scope lift-1">
           <h2>Library & Target</h2>
           <div class="field">
             <label for="library">TV Library</label>
@@ -970,7 +970,7 @@
           </div>
         </div>
 
-        <div class="panel subs-source">
+        <div class="panel subs-source lift-2">
           <h2>Subtitle Source</h2>
           <div class="actions">
             <button data-variant="ghost" on:click={pickSubsFolder}>
@@ -1007,7 +1007,7 @@
           </p>
         </div>
 
-        <div class="panel subs-preview">
+        <div class="panel subs-preview lift-3">
           <h2>Preview</h2>
           <div class="table">
             <div class="table-header subs-header">
@@ -1041,7 +1041,7 @@
       </section>
     {:else}
     <section class="grid plexmatch-row plexmatch-lookup">
-      <div class="panel">
+      <div class="panel lift-1">
         <h2>TMDb Lookup</h2>
         <div class="lookup-row">
           <div class="field">
@@ -1090,7 +1090,7 @@
     </section>
 
     <section class="grid plexmatch-row plexmatch-duo">
-      <div class="panel">
+      <div class="panel lift-2">
         <h2>TMDb Episodes</h2>
         <div class="actions">
           <button data-variant="ghost" on:click={selectAllEpisodes}>
@@ -1121,7 +1121,7 @@
         </div>
       </div>
 
-      <div class="panel">
+      <div class="panel lift-3">
         <h2>Video Files</h2>
         <div class="actions">
           <button data-variant="ghost" on:click={pickVideoFiles}>
@@ -1185,7 +1185,7 @@
     </section>
 
     <section class="grid plexmatch-row plexmatch-map">
-      <div class="panel">
+      <div class="panel lift-2">
         <h2>Mapping</h2>
         <div class="actions">
           <button data-variant="mint" on:click={mapSelected}>
@@ -1237,7 +1237,7 @@
     </section>
 
     <section class="grid plexmatch-row plexmatch-preferences">
-      <div class="panel">
+      <div class="panel lift-3">
         <h2>Mapping Preferences</h2>
         <div class="preferences-grid">
             <div>
