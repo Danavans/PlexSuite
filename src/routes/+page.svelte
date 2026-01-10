@@ -34,6 +34,7 @@
   let subsUploadPreConfirmOpen = $state(false);
   let subsUploadConfirmOpen = $state(false);
   let subsUploadSummary = $state({ uploaded: 0, failed: 0 });
+  let subsExpandedKey = $state("");
   let appLogs = $state([]);
 
   let tmdbQuery = $state("");
@@ -1044,7 +1045,16 @@
                       ? `S${String(entry.season).padStart(2, "0")}E${String(entry.episode).padStart(2, "0")} - ${entry.episodeTitle}`
                       : "--"}
                   </span>
-                  <span class="subs-bubble subs-file">{entry.fileName}</span>
+                  <span
+                    class="subs-bubble subs-file"
+                    class:expanded={subsExpandedKey === entry.path}
+                    title={entry.fileName}
+                    on:click={() => {
+                      subsExpandedKey = subsExpandedKey === entry.path ? "" : entry.path;
+                    }}
+                  >
+                    {entry.fileName}
+                  </span>
                   <span class="kicker subs-status">
                     {#if entry.status.toLowerCase() === "matched"}
                       <span class="status-dot ok" aria-label="Matched"></span>

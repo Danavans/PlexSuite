@@ -769,6 +769,18 @@ button:hover:not(:disabled) {
   justify-self: end;
 }
 
+.subs-file {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.subs-file.expanded {
+  white-space: normal;
+  overflow: visible;
+}
+
 .subs-header {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 18px;
   gap: 6px;
