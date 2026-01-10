@@ -8,3 +8,4 @@ Operational rules:
 - Keep UI text in English.
 - Avoid installers; keep portable builds.
 - Aim for behavior parity across Windows/Linux unless a platform requires a specific flow.
+- After each code change, propose a Conventional Commits message.
