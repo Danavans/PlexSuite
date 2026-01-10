@@ -10,6 +10,8 @@
 - Background sombre applique a la racine (html/body/#app-root) pour couvrir 100% de la hauteur.
 - Status global en bas (barre discrete) visible sur tous les onglets.
 - Onglet Settings = credentials + logs (pas de popup obligatoire au demarrage).
+- Header: badges "PlexTools" a gauche et "Connected" a droite sur la meme ligne; onglets a gauche, description a droite.
+- Tabs en style pilule (container + boutons actifs dynamiques), avec animations de chargement type "rise".
 
 ## Onglets et layouts
 - Trash Selector: layout 2 colonnes / 2 lignes. Gauche: Library & Target (haut) + Seasons & Action (bas). Droite: Preview List (colonne pleine). Preview List scroll interne max-height 480px.
@@ -59,6 +61,8 @@
 - UI en anglais partout.
 - Pas de police blanche sur fond clair.
 - Pas de card claire nulle part.
+- Onglet par defaut: "trash" (activeTab initialise a "trash").
+- Fenetre Tauri par defaut: 1200x815.
 
 ## Skill creee
 - Skill Codex: `portable-desktop-app` dans `C:\Users\Danavans\.codex\skills\portable-desktop-app`.
@@ -68,6 +72,7 @@
 ## Changelog
 - 2026-01-09 21:28:51: Update layouts (Trash/Subs), subtitle upload fix (metadata endpoint), logs panel added, tab names renamed, PlexMatch tweaks, dark theme refinements.
 - 2026-01-09 21:45:12: Sub uploader preview formatting, status dot styling, logs + settings updates, icon generation, README updated, bundle config adjustments.
+- 2026-01-10 00:00:00: Header rework (badges alignes, tabs a gauche, description a droite), tabs style/animations, panel lift animations, settings panel aligne a gauche, window height 815, badge size adjustments.
 
 ## Derniere mise a jour
-- 2026-01-09 21:45:12
+- 2026-01-10 00:00:00
