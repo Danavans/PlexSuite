@@ -31,6 +31,9 @@
   let subsRoot = $state("");
   let subsPreview = $state({ total: 0, matched: 0, entries: [] });
   let subsUploadBusy = $state(false);
+  let subsUploadPreConfirmOpen = $state(false);
+  let subsUploadConfirmOpen = $state(false);
+  let subsUploadSummary = $state({ uploaded: 0, failed: 0 });
   let appLogs = $state([]);
 
   let tmdbQuery = $state("");
@@ -382,8 +385,10 @@
       setStatus("error", "No matched subtitles to upload.");
       return;
     }
+    subsUploadConfirmOpen = false;
     subsUploadBusy = true;
     setStatus("info", "Uploading subtitles...");
+    let result = null;
     try {
       const items = subsPreview.entries
         .filter((entry) => entry.episodeRatingKey)
@@ -391,7 +396,7 @@
           path: entry.path,
           episodeRatingKey: entry.episodeRatingKey
         }));
-      const result = await invoke("upload_subtitles", {
+      result = await invoke("upload_subtitles", {
         serverUrl,
         token,
         items
@@ -408,6 +413,13 @@
       setStatus("error", `Upload failed: ${error}`);
     } finally {
       subsUploadBusy = false;
+    }
+    if (result) {
+      subsUploadSummary = {
+        uploaded: result.uploaded,
+        failed: result.failed.length
+      };
+      subsUploadConfirmOpen = true;
     }
   }
 
@@ -632,7 +644,12 @@
   });
 </script>
 
-<main class="app">
+<main
+  class="app"
+  class:app-blocked={subsUploadBusy}
+  aria-busy={subsUploadBusy}
+  inert={subsUploadBusy}
+>
   <header class="hero">
     <div class="hero-top">
       <div class="hero-brand">
@@ -997,7 +1014,7 @@
             </button>
             <button
               data-variant="primary"
-              on:click={uploadSubtitles}
+              on:click={() => (subsUploadPreConfirmOpen = true)}
               disabled={subsPreview.matched === 0 || subsUploadBusy}
             >
               Upload Subtitles
@@ -1291,6 +1308,69 @@
         </button>
         <button data-variant="primary" on:click={confirmPurge} disabled={isBusy}>
           Purge Trash
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if subsUploadBusy}
+  <div class="modal-backdrop blocking">
+    <div class="modal modal-loading">
+      <div class="loader" aria-hidden="true"></div>
+      <h3>Uploading subtitles</h3>
+      <p>Please wait while PlexTools uploads your subtitle files.</p>
+    </div>
+  </div>
+{/if}
+
+{#if subsUploadPreConfirmOpen}
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>Confirm subtitle upload</h3>
+      <p>
+        Upload {subsPreview.matched} matched subtitle file(s) to Plex now?
+      </p>
+      <div class="actions">
+        <button
+          data-variant="ghost"
+          on:click={() => (subsUploadPreConfirmOpen = false)}
+        >
+          Cancel
+        </button>
+        <button
+          data-variant="primary"
+          on:click={() => {
+            subsUploadPreConfirmOpen = false;
+            uploadSubtitles();
+          }}
+          disabled={subsUploadBusy}
+        >
+          Upload now
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if subsUploadConfirmOpen}
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>Subtitle upload complete</h3>
+      {#if subsUploadSummary.failed > 0}
+        <p>
+          Uploaded {subsUploadSummary.uploaded} file(s) with
+          {subsUploadSummary.failed} error(s).
+        </p>
+      {:else}
+        <p>Uploaded {subsUploadSummary.uploaded} subtitle file(s) successfully.</p>
+      {/if}
+      <div class="actions">
+        <button
+          data-variant="primary"
+          on:click={() => (subsUploadConfirmOpen = false)}
+        >
+          Done
         </button>
       </div>
     </div>
