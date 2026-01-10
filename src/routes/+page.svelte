@@ -634,9 +634,21 @@
 
 <main class="app">
   <header class="hero">
-    <div class="hero-left">
-      <p class="badge">PlexTools</p>
-      <h1 class="sr-only">PlexTools</h1>
+    <div class="hero-top">
+      <div class="hero-brand">
+        <p class="badge">PlexTools</p>
+        <h1 class="sr-only">PlexTools</h1>
+      </div>
+      <div class="status-row">
+        <div class="status-pill">
+          <span class={`status-dot ${isConnected ? "ok" : "down"}`}></span>
+          <span class="status-text">
+            {isConnected ? "Connected" : "Disconnected"}
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-bottom">
       <div class="tabs-wrap">
         <div class="tabs">
         <button
@@ -665,17 +677,7 @@
         </button>
         </div>
       </div>
-    </div>
-    <div class="hero-right">
-      <div class="status-row">
-        <div class="status-pill">
-          <span class={`status-dot ${isConnected ? "ok" : "down"}`}></span>
-          <span class="status-text">
-            {isConnected ? "Connected" : "Disconnected"}
-          </span>
-        </div>
-      </div>
-      <p>{tabDescription}</p>
+      <p class="hero-desc">{tabDescription}</p>
     </div>
   </header>
 
