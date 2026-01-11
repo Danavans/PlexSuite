@@ -797,25 +797,25 @@
         <div class="tabs">
         <button
           class:active-tab={activeTab === "trash"}
-          onclick={() => (activeTab = "trash")}
+          on:click={() => (activeTab = "trash")}
         >
           Trash Selector
         </button>
         <button
           class:active-tab={activeTab === "subs"}
-          onclick={() => (activeTab = "subs")}
+          on:click={() => (activeTab = "subs")}
         >
           Sub Uploader
         </button>
         <button
           class:active-tab={activeTab === "plexmatch"}
-          onclick={() => (activeTab = "plexmatch")}
+          on:click={() => (activeTab = "plexmatch")}
         >
           Plexmatch Generator
         </button>
         <button
           class:active-tab={activeTab === "settings"}
-          onclick={() => (activeTab = "settings")}
+          on:click={() => (activeTab = "settings")}
         >
           Settings
         </button>
@@ -863,7 +863,7 @@
             />
           </div>
         <div class="actions">
-          <button data-variant="primary" onclick={saveSettings} disabled={isBusy}>
+          <button data-variant="primary" on:click={saveSettings} disabled={isBusy}>
             Save & Connect
           </button>
         </div>
@@ -873,7 +873,7 @@
         <div class="actions">
           <button
             data-variant="ghost"
-            onclick={() => {
+            on:click={() => {
               appLogs = [];
             }}
           >
@@ -905,7 +905,7 @@
             <select
               id="library"
               bind:value={selectedLibraryId}
-              onchange={(event) => {
+              on:change={/** @param {Event} event */ (event) => {
                 const key = event.currentTarget.value;
                 if (key) {
                   const library = libraries.find((item) => item.id === key);
@@ -933,7 +933,7 @@
             <select
               id="trash-show"
               bind:value={selectedShowKey}
-              onchange={(event) => {
+              on:change={/** @param {Event} event */ (event) => {
                 const key = event.currentTarget.value;
                 const show = shows.find((item) => item.rating_key === key);
                 if (show) {
@@ -958,7 +958,7 @@
             <select
               id="trash-season"
               bind:value={selectedSeasonKey}
-              onchange={(event) => {
+              on:change={/** @param {Event} event */ (event) => {
                 const key = event.currentTarget.value;
                 const season = seasons.find((item) => item.rating_key === key);
                 if (season) {
@@ -1006,21 +1006,21 @@
           <div class="actions" style="margin-top: 18px;">
             <button
               data-variant="primary"
-              onclick={openPurgeConfirm}
+              on:click={openPurgeConfirm}
               disabled={!selectedShow || isBusy}
             >
               Purge Trash
             </button>
             <button
               data-variant="ghost"
-              onclick={previewTrash}
+              on:click={previewTrash}
               disabled={!selectedShow || isBusy}
             >
               Dry Run
             </button>
             <button
               data-variant="ghost"
-              onclick={() => {
+              on:click={() => {
                 selectedShow = null;
                 selectedShowKey = "";
                 selectedSeason = null;
@@ -1047,7 +1047,7 @@
             <select
               id="library"
               bind:value={selectedLibraryId}
-              onchange={(event) => {
+              on:change={/** @param {Event} event */ (event) => {
                 const key = event.currentTarget.value;
                 if (key) {
                   const library = libraries.find((item) => item.id === key);
@@ -1075,7 +1075,7 @@
             <select
               id="show-select"
               bind:value={selectedShowKey}
-              onchange={(event) => {
+              on:change={/** @param {Event} event */ (event) => {
                 const key = event.currentTarget.value;
                 const show = shows.find((item) => item.rating_key === key);
                 if (show) {
@@ -1099,7 +1099,7 @@
             <select
               id="season-select"
               bind:value={selectedSeasonKey}
-              onchange={(event) => {
+              on:change={/** @param {Event} event */ (event) => {
                 const key = event.currentTarget.value;
                 const season = seasons.find((item) => item.rating_key === key);
                 if (season) {
@@ -1122,7 +1122,7 @@
         <div class="panel subs-source lift-2">
           <h2>Subtitle Source</h2>
           <div class="actions">
-            <button data-variant="ghost" onclick={pickSubsFolder}>
+            <button data-variant="ghost" on:click={pickSubsFolder}>
               Choose folder
             </button>
           </div>
@@ -1137,14 +1137,14 @@
           <div class="actions">
             <button
               data-variant="ghost"
-              onclick={previewSubtitles}
+              on:click={previewSubtitles}
               disabled={!selectedShow || isBusy}
             >
               Preview Mapping
             </button>
             <button
               data-variant="primary"
-              onclick={() => (subsUploadPreConfirmOpen = true)}
+              on:click={() => (subsUploadPreConfirmOpen = true)}
               disabled={subsPreview.matched === 0 || subsUploadBusy}
             >
               Upload Subtitles
@@ -1180,10 +1180,10 @@
                     title={entry.fileName}
                     role="button"
                     tabindex="0"
-                    onclick={() => {
+                    on:click={() => {
                       subsExpandedKey = subsExpandedKey === entry.path ? "" : entry.path;
                     }}
-                    onkeydown={(event) => {
+                    on:keydown={/** @param {KeyboardEvent} event */ (event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         subsExpandedKey =
@@ -1217,14 +1217,14 @@
               id="tmdb-search"
               placeholder="Type a series name"
               bind:value={tmdbQuery}
-              onkeydown={(event) => {
+              on:keydown={/** @param {KeyboardEvent} event */ (event) => {
                 if (event.key === "Enter") {
                   searchTmdb();
                 }
               }}
             />
           </div>
-          <button data-variant="ghost" onclick={searchTmdb} disabled={isBusy}>
+          <button data-variant="ghost" on:click={searchTmdb} disabled={isBusy}>
             Search TMDb
           </button>
           <div class="field">
@@ -1232,7 +1232,7 @@
             <select
               id="tmdb-series"
               bind:value={selectedSeriesId}
-              onchange={(event) => {
+              on:change={/** @param {Event} event */ (event) => {
                 const id = Number(event.currentTarget.value);
                 const series = tmdbResults.find((item) => item.id === id);
                 if (series) {
@@ -1260,10 +1260,10 @@
       <div class="panel lift-2">
         <h2>TMDb Episodes</h2>
         <div class="actions">
-          <button data-variant="ghost" onclick={selectAllEpisodes}>
+          <button data-variant="ghost" on:click={selectAllEpisodes}>
             Select all
           </button>
-          <button data-variant="ghost" onclick={clearEpisodeSelection}>
+          <button data-variant="ghost" on:click={clearEpisodeSelection}>
             Clear selection
           </button>
         </div>
@@ -1274,7 +1274,7 @@
             multiple
             size="16"
             bind:value={selectedEpisodeCodes}
-            onchange={(event) => {
+            on:change={/** @param {Event} event */ (event) => {
               selectedEpisodeCodes = readSelectedValues(event);
             }}
             class="fixed-list"
@@ -1291,10 +1291,10 @@
       <div class="panel lift-3">
         <h2>Video Files</h2>
         <div class="actions">
-          <button data-variant="ghost" onclick={pickVideoFiles}>
+          <button data-variant="ghost" on:click={pickVideoFiles}>
             Add files
           </button>
-          <button data-variant="ghost" onclick={clearVideoFiles}>
+          <button data-variant="ghost" on:click={clearVideoFiles}>
             Clear list
           </button>
         </div>
@@ -1302,9 +1302,9 @@
           <span class="field-label">Files (drag to reorder)</span>
           <div
             class="select-list fixed-list"
-            onpointermove={movePointerDrag}
-            onpointerup={endPointerDrag}
-            onpointerleave={endPointerDrag}
+            on:pointermove={movePointerDrag}
+            on:pointerup={endPointerDrag}
+            on:pointerleave={endPointerDrag}
           >
             {#if videoFiles.length === 0}
               <div class="kicker">No files added yet.</div>
@@ -1317,7 +1317,7 @@
                   <span
                     class="drag-handle"
                     title="Drag"
-                    onpointerdown={(event) => startPointerDrag(event, index)}
+                    on:pointerdown={/** @param {PointerEvent} event */ (event) => startPointerDrag(event, index)}
                   >
                     ::
                   </span>
@@ -1329,7 +1329,7 @@
                       aria-label="Move up"
                       title="Move up"
                       disabled={index === 0}
-                      onclick={() => moveFile(index, index - 1)}
+                      on:click={() => moveFile(index, index - 1)}
                     >
                       ▲
                     </button>
@@ -1338,7 +1338,7 @@
                       aria-label="Move down"
                       title="Move down"
                       disabled={index === videoFiles.length - 1}
-                      onclick={() => moveFile(index, index + 1)}
+                      on:click={() => moveFile(index, index + 1)}
                     >
                       ▼
                     </button>
@@ -1355,12 +1355,12 @@
       <div class="panel lift-2">
         <h2>Mapping</h2>
         <div class="actions">
-          <button data-variant="mint" onclick={mapSelected}>
+          <button data-variant="mint" on:click={mapSelected}>
             Map selected
           </button>
           <button
             data-variant="ghost"
-            onclick={() => {
+            on:click={() => {
               mappings = [];
               updatePlexmatchPreview();
             }}
@@ -1387,7 +1387,7 @@
                   class="icon-btn"
                   aria-label="Remove mapping"
                   title="Remove"
-                  onclick={() => removeMapping(index)}
+                  on:click={() => removeMapping(index)}
                 >
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path
@@ -1411,11 +1411,11 @@
               <div class="field">
                 <span class="field-label">Path depth</span>
                 <div class="inline-field">
-                  <button data-variant="ghost" onclick={decreasePathDepth}>
+                  <button data-variant="ghost" on:click={decreasePathDepth}>
                     -
                   </button>
                   <div class="depth-pill">{pathDepth}</div>
-                  <button data-variant="ghost" onclick={increasePathDepth}>
+                  <button data-variant="ghost" on:click={increasePathDepth}>
                     +
                   </button>
                   <span class="kicker">0 = parent folder only</span>
@@ -1424,7 +1424,7 @@
               <div class="field">
                 <span class="field-label">Export</span>
                 <div class="actions">
-                  <button data-variant="primary" onclick={savePlexmatch}>
+                  <button data-variant="primary" on:click={savePlexmatch}>
                     Save .plexmatch
                   </button>
                 </div>
@@ -1452,10 +1452,10 @@
         This will remove all trashed items for <strong>{confirmTargetLabel}</strong>.
       </p>
       <div class="actions">
-        <button data-variant="ghost" onclick={() => (confirmOpen = false)}>
+        <button data-variant="ghost" on:click={() => (confirmOpen = false)}>
           Cancel
         </button>
-        <button data-variant="primary" onclick={confirmPurge} disabled={isBusy}>
+        <button data-variant="primary" on:click={confirmPurge} disabled={isBusy}>
           Purge Trash
         </button>
       </div>
@@ -1471,7 +1471,7 @@
       <div class="actions">
         <button
           data-variant="primary"
-          onclick={() => (purgeCompleteOpen = false)}
+          on:click={() => (purgeCompleteOpen = false)}
         >
           Done
         </button>
@@ -1500,13 +1500,13 @@
       <div class="actions">
         <button
           data-variant="ghost"
-          onclick={() => (subsUploadPreConfirmOpen = false)}
+          on:click={() => (subsUploadPreConfirmOpen = false)}
         >
           Cancel
         </button>
         <button
           data-variant="primary"
-          onclick={() => {
+          on:click={() => {
             subsUploadPreConfirmOpen = false;
             uploadSubtitles();
           }}
@@ -1535,7 +1535,7 @@
       <div class="actions">
         <button
           data-variant="primary"
-          onclick={() => (subsUploadConfirmOpen = false)}
+          on:click={() => (subsUploadConfirmOpen = false)}
         >
           Done
         </button>
@@ -1552,7 +1552,7 @@
       <div class="actions">
         <button
           data-variant="primary"
-          onclick={() => (plexmatchSavedOpen = false)}
+          on:click={() => (plexmatchSavedOpen = false)}
         >
           Done
         </button>
@@ -1560,4 +1560,5 @@
     </div>
   </div>
 {/if}
+
 
