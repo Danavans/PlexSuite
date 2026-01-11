@@ -701,6 +701,11 @@
   /** @type {number | null} */
   let dragOverIndex = $state(null);
   let dragActive = $state(false);
+  /** @type {number | null} */
+  let mappingDragIndex = $state(null);
+  /** @type {number | null} */
+  let mappingDragOverIndex = $state(null);
+  let mappingDragActive = $state(false);
 
   /**
    * @param {PointerEvent} event
@@ -772,6 +777,75 @@
   }
 
   /**
+   * @param {PointerEvent} event
+   * @param {number} index
+   */
+  function startMappingDrag(event, index) {
+    if (event.button !== 0) return;
+    const target = event.target;
+    if (target instanceof HTMLElement) {
+      if (target.closest("button")) {
+        return;
+      }
+    }
+    mappingDragActive = true;
+    mappingDragIndex = index;
+    mappingDragOverIndex = index;
+    const list = /** @type {HTMLElement | null} */ (
+      event.currentTarget?.closest?.(".mapping-table") ?? null
+    );
+    const captureTarget = list ?? /** @type {HTMLElement} */ (event.currentTarget);
+    captureTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+
+  /**
+   * @param {PointerEvent} event
+   */
+  function moveMappingDrag(event) {
+    if (!mappingDragActive) return;
+    if (mappingDragIndex === null) return;
+    const list = /** @type {HTMLElement | null} */ (event.currentTarget);
+    if (list) {
+      const rect = list.getBoundingClientRect();
+      const threshold = 36;
+      const minSpeed = 2;
+      const maxSpeed = 12;
+      if (event.clientY < rect.top + threshold) {
+        const proximity = (rect.top + threshold - event.clientY) / threshold;
+        const speed = Math.round(minSpeed + proximity * (maxSpeed - minSpeed));
+        list.scrollTop -= speed;
+      } else if (event.clientY > rect.bottom - threshold) {
+        const proximity = (event.clientY - (rect.bottom - threshold)) / threshold;
+        const speed = Math.round(minSpeed + proximity * (maxSpeed - minSpeed));
+        list.scrollTop += speed;
+      }
+    }
+    const el = document.elementFromPoint(event.clientX, event.clientY);
+    const row = /** @type {HTMLElement | null} */ (
+      el?.closest?.(".mapping-row") ?? null
+    );
+    if (!row) return;
+    const index = Number(row.dataset.index);
+    if (Number.isNaN(index) || index === mappingDragIndex) return;
+    moveMappingFile(mappingDragIndex, index);
+    mappingDragIndex = index;
+    mappingDragOverIndex = index;
+  }
+
+  /**
+   * @param {PointerEvent} event
+   */
+  function endMappingDrag(event) {
+    if (!mappingDragActive) return;
+    mappingDragActive = false;
+    mappingDragIndex = null;
+    mappingDragOverIndex = null;
+    const target = /** @type {HTMLElement} */ (event.currentTarget);
+    target.releasePointerCapture(event.pointerId);
+  }
+
+  /**
    * @param {number} fromIndex
    * @param {number} toIndex
    */
@@ -782,6 +856,28 @@
     const [moved] = next.splice(fromIndex, 1);
     next.splice(toIndex, 0, moved);
     videoFiles = next;
+  }
+
+  /**
+   * @param {number} fromIndex
+   * @param {number} toIndex
+   */
+  function moveMappingFile(fromIndex, toIndex) {
+    if (fromIndex < 0 || toIndex < 0) return;
+    if (fromIndex === toIndex) return;
+    const next = [...mappings];
+    const files = next.map((item) => ({
+      fileName: item.fileName,
+      filePath: item.filePath
+    }));
+    const [moved] = files.splice(fromIndex, 1);
+    if (!moved) return;
+    files.splice(toIndex, 0, moved);
+    mappings = next.map((item, index) => ({
+      ...item,
+      fileName: files[index].fileName,
+      filePath: files[index].filePath
+    }));
   }
 
   /**
@@ -1369,7 +1465,13 @@
             Clear mapping
           </button>
         </div>
-        <div class="table" style="margin-top: 10px;">
+        <div
+          class="table mapping-table"
+          style="margin-top: 10px;"
+          on:pointermove={moveMappingDrag}
+          on:pointerup={endMappingDrag}
+          on:pointerleave={endMappingDrag}
+        >
           <div class="table-header">
             <span>Episode</span>
             <span class="file-column">File</span>
@@ -1379,9 +1481,15 @@
             <p class="kicker">No mappings yet.</p>
           {:else}
             {#each mappings as map, index}
-              <div class="table-row">
+              <div
+                class="table-row mapping-row"
+                data-index={index}
+              >
                 <span class="mapping-episode">{map.code}</span>
-                <span class="file-column mapping-file">
+                <span
+                  class={`file-column mapping-file ${mappingDragOverIndex === index ? "drag-over" : ""} ${mappingDragIndex === index ? "dragging" : ""}`}
+                  on:pointerdown={/** @param {PointerEvent} event */ (event) => startMappingDrag(event, index)}
+                >
                   {buildDisplayPath(map.filePath, map.fileName)}
                 </span>
                 <button
