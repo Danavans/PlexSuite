@@ -1,5 +1,5 @@
 {
-  "name": "plex-tools",
+  "name": "plex-suite",
   "version": "0.1.0",
   "description": "Unified Plex tools (trash purge, subtitle upload, PlexMatch)",
   "type": "module",
@@ -27,3 +27,4 @@
     "@tauri-apps/cli": "^2"
   }
 }
+

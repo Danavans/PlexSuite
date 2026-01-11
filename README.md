@@ -1,11 +1,11 @@
-# PlexTools
+# PlexSuite
 
-Portable desktop toolbox for Plex TV libraries. PlexTools bundles three workflows in one app:
+Portable desktop toolbox for Plex TV libraries. PlexSuite bundles three workflows in one app:
 - Trash Selector: safe, selective trash purge for a show or season.
 - Sub Uploader: bulk subtitle upload with automatic episode matching.
 - Plexmatch Generator: build a .plexmatch file from TMDb episodes and local files.
 
-## Why PlexTools
+## Why PlexSuite
 - Dark, focused UI tuned for Plex workflows.
 - Preview before destructive actions.
 - Focused on TV libraries (shows, seasons, episodes).
@@ -38,8 +38,8 @@ npm run tauri build
 ```
 
 Output:
-- Windows: `src-tauri/target/release/plex-tools.exe`
-- Linux: `src-tauri/target/release/plex-tools`
+- Windows: `src-tauri/target/release/plex-suite.exe`
+- Linux: `src-tauri/target/release/plex-suite`
 
 ## Getting a Plex token
 1. Open Plex Web in a browser and sign in.
@@ -79,11 +79,11 @@ Matching notes:
 
 ## FAQ
 
-### PlexTools shows "Disconnected" after I enter my Plex URL and token
+### PlexSuite shows "Disconnected" after I enter my Plex URL and token
 Make sure the URL includes the protocol (for example `http://192.168.1.10:32400`) and that the token is valid. Check that Plex Web works with the same URL on this machine.
 
 ### Where are settings stored and how do I reset them?
-Settings are stored next to the executable in `settings.json`. Delete that file to reset PlexTools.
+Settings are stored next to the executable in `settings.json`. Delete that file to reset PlexSuite.
 
 ### Subtitles are not matching any episodes
 Confirm the subtitle files include episode identifiers like `S01E02` or `1x02`. Use Preview Mapping to verify matches before upload.
@@ -108,3 +108,4 @@ Open Settings and use the Logs panel to review recent actions with timestamps.
 
 ## License
 MIT
+

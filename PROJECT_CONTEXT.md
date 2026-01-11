@@ -1,7 +1,7 @@
-# PlexTools - Project Context
+# PlexSuite - Project Context
 
 ## Resume rapide
-- Projet dans `D:\Medias\Divers\Tools\PlexTools\PlexTools` (Tauri + Svelte).
+- Projet dans `D:\Medias\Divers\Tools\PlexSuite\PlexSuite` (Tauri + Svelte).
 - Objectif: app 3-en-1 pour Plex (Trash Selector, Sub Uploader, Plexmatch Generator) avec UI en anglais.
 - Theme: look Plex Trash Selector (fond sombre global, cards sombres, texte clair, accents orange). Aucun panel clair.
 
@@ -14,7 +14,7 @@
 - Background sombre applique a la racine (html/body/#app-root) pour couvrir 100% de la hauteur.
 - Status global en bas (barre discrete) visible sur tous les onglets.
 - Onglet Settings = credentials + logs (pas de popup obligatoire au demarrage).
-- Header: badges "PlexTools" a gauche et "Connected" a droite sur la meme ligne; onglets a gauche, description a droite.
+- Header: badges "PlexSuite" a gauche et "Connected" a droite sur la meme ligne; onglets a gauche, description a droite.
 - Tabs en style pilule (container + boutons actifs dynamiques), avec animations de chargement type "rise".
 
 ## Onglets et layouts
@@ -52,7 +52,7 @@
 - Tentative d'embed via tauri-winres retiree (conflit resource VERSION). En cas d'icone non mise a jour: vider cache Windows.
 
 ## Build / nettoyage
-- Build portable Windows: `npm run tauri build` puis exe dans `src-tauri/target/release/plex-tools.exe`.
+- Build portable Windows: `npm run tauri build` puis exe dans `src-tauri/target/release/plex-suite.exe`.
 - Dossiers safe a supprimer: `src-tauri/target`, `node_modules`, `.svelte-kit`, `build`.
 
 ## Fichiers modifies principaux
@@ -73,7 +73,7 @@
 ## Skill creee
 - Skill Codex: `portable-desktop-app` dans `C:\Users\Danavans\.codex\skills\portable-desktop-app`.
 - Declencheurs: "app portable", "portable desktop app", "Windows + Linux", "single portable executable".
-- Stack par defaut: Tauri + Svelte + theme PlexTools. Pas d'installers par defaut.
+- Stack par defaut: Tauri + Svelte + theme PlexSuite. Pas d'installers par defaut.
 
 ## Changelog
 - 2026-01-11 19:50:00: PlexMatch drag reorder from full file rows, remove reorder handle/arrows, auto-scroll while dragging, mapping drag for files and episodes with column-only feedback, wrap long file names without horizontal scroll, clamp path depth to max parent depth, replace mapping remove icon with blocked circle.
@@ -81,3 +81,4 @@
 - 2026-01-09 21:28:51: Update layouts (Trash/Subs), subtitle upload fix (metadata endpoint), logs panel added, tab names renamed, PlexMatch tweaks, dark theme refinements.
 - 2026-01-09 21:45:12: Sub uploader preview formatting, status dot styling, logs + settings updates, icon generation, README updated, bundle config adjustments.
 - 2026-01-10 00:00:00: Header rework (badges alignes, tabs a gauche, description a droite), tabs style/animations, panel lift animations, settings panel aligne a gauche, window height 815, badge size adjustments.
+

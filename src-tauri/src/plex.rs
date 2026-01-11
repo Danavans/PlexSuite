@@ -84,7 +84,7 @@ async fn plex_get_json(
         .get(url)
         .header("Accept", "application/json")
         .header("X-Plex-Client-Identifier", client_id)
-        .header("X-Plex-Product", "PlexTools")
+        .header("X-Plex-Product", "PlexSuite")
         .header("X-Plex-Version", "0.1.0")
         .send()
         .await
@@ -115,7 +115,7 @@ async fn plex_delete(
     let response = client
         .delete(url)
         .header("X-Plex-Client-Identifier", client_id)
-        .header("X-Plex-Product", "PlexTools")
+        .header("X-Plex-Product", "PlexSuite")
         .header("X-Plex-Version", "0.1.0")
         .send()
         .await
@@ -163,7 +163,7 @@ async fn plex_post_subtitle(
         .post(url)
         .header("Accept", "text/plain, */*")
         .header("X-Plex-Client-Identifier", client_id)
-        .header("X-Plex-Product", "PlexTools")
+        .header("X-Plex-Product", "PlexSuite")
         .header("X-Plex-Version", "0.1.0")
         .body(data)
         .send()
@@ -622,3 +622,4 @@ pub async fn upload_subtitle_to_episode(
 ) -> Result<(), String> {
     plex_post_subtitle(app, server_url, token, episode_rating_key, file_path).await
 }
+

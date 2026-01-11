@@ -991,8 +991,8 @@
   <header class="hero">
     <div class="hero-top">
       <div class="hero-brand">
-        <p class="badge">PlexTools</p>
-        <h1 class="sr-only">PlexTools</h1>
+        <p class="badge">PlexSuite</p>
+        <h1 class="sr-only">PlexSuite</h1>
       </div>
       <div class="status-row">
         <div class="status-pill">
@@ -1700,7 +1700,7 @@
     <div class="modal modal-loading">
       <div class="loader" aria-hidden="true"></div>
       <h3>Uploading subtitles</h3>
-      <p>Please wait while PlexTools uploads your subtitle files.</p>
+      <p>Please wait while PlexSuite uploads your subtitle files.</p>
     </div>
   </div>
 {/if}
@@ -1775,5 +1775,6 @@
     </div>
   </div>
 {/if}
+
 
 
