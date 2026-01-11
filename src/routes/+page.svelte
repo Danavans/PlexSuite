@@ -772,7 +772,10 @@
     {:else if activeTab === "trash"}
       <section class="grid trash-grid">
         <div class="panel trash-library lift-1">
-          <h2>Library & Target</h2>
+          <h2>Library Scope</h2>
+          <div class="kicker">
+            Choose a library, show, and optional season to define the purge scope.
+          </div>
           <div class="field">
             <label for="library">TV Library</label>
             <select
