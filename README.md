@@ -77,6 +77,26 @@ Matching notes:
 5. Adjust "Path depth" to control how much parent path is written.
 6. Click "Save .plexmatch" and choose a location.
 
+## FAQ
+
+### PlexTools shows "Disconnected" after I enter my Plex URL and token
+Make sure the URL includes the protocol (for example `http://192.168.1.10:32400`) and that the token is valid. Check that Plex Web works with the same URL on this machine.
+
+### Where are settings stored and how do I reset them?
+Settings are stored next to the executable in `settings.json`. Delete that file to reset PlexTools.
+
+### Subtitles are not matching any episodes
+Confirm the subtitle files include episode identifiers like `S01E02` or `1x02`. Use Preview Mapping to verify matches before upload.
+
+### Upload succeeds but I do not see subtitles in Plex
+Plex may need a refresh. Try refreshing metadata for the show or the affected season in Plex Web.
+
+### The .plexmatch file includes too much path
+Lower the "Path depth" value. Use `0` to use the parent folder, `-1` for the file name only, or increase it to include more parent folders.
+
+### Where can I find logs?
+Open Settings and use the Logs panel to review recent actions with timestamps.
+
 ## Data and portability
 - Settings live next to the executable in `settings.json`.
 - Delete `settings.json` to reset the app.
