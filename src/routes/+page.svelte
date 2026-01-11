@@ -27,6 +27,8 @@
   let preview = $state({ count: 0, titles: [] });
   let confirmOpen = $state(false);
   let confirmTargetLabel = $state("");
+  let purgeSummary = $state({ removed: 0 });
+  let purgeCompleteOpen = $state(false);
   let plexmatchSavedOpen = $state(false);
   let plexmatchSavedPath = $state("");
 
@@ -342,6 +344,8 @@
         showRatingKey: selectedShow.rating_key,
         seasonRatingKey: selectedSeason?.rating_key ?? null
       });
+      purgeSummary = { removed: result.removed_count };
+      purgeCompleteOpen = true;
       setStatus("success", `Removed ${result.removed_count} trashed item(s).`);
     } catch (error) {
       setStatus("error", `Purge failed: ${error}`);
@@ -1316,6 +1320,23 @@
         </button>
         <button data-variant="primary" on:click={confirmPurge} disabled={isBusy}>
           Purge Trash
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if purgeCompleteOpen}
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>Trash purge complete</h3>
+      <p>Removed {purgeSummary.removed} trashed item(s).</p>
+      <div class="actions">
+        <button
+          data-variant="primary"
+          on:click={() => (purgeCompleteOpen = false)}
+        >
+          Done
         </button>
       </div>
     </div>
