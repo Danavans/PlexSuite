@@ -203,8 +203,31 @@
     plexmatchPreview = text;
   }
 
+  /**
+   * @returns {number}
+   */
+  function getMaxPathDepth() {
+    let maxDepth = 0;
+    for (const file of videoFiles) {
+      const parts = normalizePath(file.path).split("/").filter(Boolean);
+      const parentCount = Math.max(0, parts.length - 1);
+      const depth = Math.max(0, parentCount - 1);
+      if (depth > maxDepth) {
+        maxDepth = depth;
+      }
+    }
+    return maxDepth;
+  }
+
   $effect(() => {
     updatePlexmatchPreview();
+  });
+
+  $effect(() => {
+    const maxDepth = getMaxPathDepth();
+    if (pathDepth > maxDepth) {
+      pathDepth = maxDepth;
+    }
   });
 
   async function loadSettings() {
@@ -599,7 +622,10 @@
   }
 
   function increasePathDepth() {
-    pathDepth += 1;
+    const maxDepth = getMaxPathDepth();
+    if (pathDepth < maxDepth) {
+      pathDepth += 1;
+    }
   }
 
   function decreasePathDepth() {
