@@ -513,8 +513,8 @@ textarea {
 
 .preferences-grid {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(360px, 1.45fr);
+  gap: 12px;
   align-items: start;
 }
 
