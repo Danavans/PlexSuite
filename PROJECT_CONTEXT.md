@@ -18,7 +18,7 @@
 - Tabs en style pilule (container + boutons actifs dynamiques), avec animations de chargement type "rise".
 
 ## Onglets et layouts
-- Trash Selector: layout 2 colonnes / 2 lignes. Gauche: Library & Target (haut) + Seasons & Action (bas). Droite: Preview List (colonne pleine). Preview List scroll interne max-height 480px.
+- Trash Selector: layout 2 colonnes / 2 lignes. Gauche: Library Scope (haut) + Purge Controls (bas). Droite: Preview List (colonne pleine). Preview List scroll interne max-height 480px.
 - Sub Uploader: Library & Target + Subtitle Source cote a cote (50/50). Preview en dessous pleine largeur. Choix dossier via bouton (pas de drag/drop).
 - Plexmatch Generator: TMDb lookup en haut, episodes + video files cote a cote, mapping dessous, preferences en bas, preview a droite.
 
@@ -34,11 +34,13 @@
 - Reorder fichiers via drag-handle + boutons up/down.
 - Root path depth: 0 = dossier parent, -1 = fichier seul, +n = remonte.
 - Save .plexmatch via dialog uniquement.
+- Confirmation de sauvegarde en modal theme, dialog affiche a chaque export.
 
 ## Trash Selector (etat actuel)
 - Load shows auto sur selection library (pas de bouton).
 - Target mode supprime.
 - Preview list et actions se partagent la colonne gauche/droite.
+- Confirmation purge + modal de fin de purge en theme app.
 
 ## Logs
 - Nouveau panneau Logs dans Settings, alimente par setStatus().
@@ -74,9 +76,10 @@
 - Stack par defaut: Tauri + Svelte + theme PlexTools. Pas d'installers par defaut.
 
 ## Changelog
+- 2026-01-11 00:00:00: PlexMatch save confirm modal + dialog always prompts, Trash purge completion modal, copy + spacing tweaks, PlexMatch spacing/preview width refinements.
 - 2026-01-09 21:28:51: Update layouts (Trash/Subs), subtitle upload fix (metadata endpoint), logs panel added, tab names renamed, PlexMatch tweaks, dark theme refinements.
 - 2026-01-09 21:45:12: Sub uploader preview formatting, status dot styling, logs + settings updates, icon generation, README updated, bundle config adjustments.
 - 2026-01-10 00:00:00: Header rework (badges alignes, tabs a gauche, description a droite), tabs style/animations, panel lift animations, settings panel aligne a gauche, window height 815, badge size adjustments.
 
 ## Derniere mise a jour
-- 2026-01-10 00:00:00
+- 2026-01-11 00:00:00
