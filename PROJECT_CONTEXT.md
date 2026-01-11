@@ -76,10 +76,8 @@
 - Stack par defaut: Tauri + Svelte + theme PlexTools. Pas d'installers par defaut.
 
 ## Changelog
-- 2026-01-11 00:00:00: PlexMatch save confirm modal + dialog always prompts, Trash purge completion modal, copy + spacing tweaks, PlexMatch spacing/preview width refinements.
+- 2026-01-11 19:50:00: PlexMatch drag reorder from full file rows, remove reorder handle/arrows, auto-scroll while dragging, mapping drag for files and episodes with column-only feedback, wrap long file names without horizontal scroll, clamp path depth to max parent depth, replace mapping remove icon with blocked circle.
+- 2026-01-11 19:50:00: PlexMatch save confirm modal + dialog always prompts, Trash purge completion modal, copy + spacing tweaks, PlexMatch spacing/preview width refinements.
 - 2026-01-09 21:28:51: Update layouts (Trash/Subs), subtitle upload fix (metadata endpoint), logs panel added, tab names renamed, PlexMatch tweaks, dark theme refinements.
 - 2026-01-09 21:45:12: Sub uploader preview formatting, status dot styling, logs + settings updates, icon generation, README updated, bundle config adjustments.
 - 2026-01-10 00:00:00: Header rework (badges alignes, tabs a gauche, description a droite), tabs style/animations, panel lift animations, settings panel aligne a gauche, window height 815, badge size adjustments.
-
-## Derniere mise a jour
-- 2026-01-11 00:00:00
