@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
-  import { open, save, message } from "@tauri-apps/plugin-dialog";
+  import { open, save } from "@tauri-apps/plugin-dialog";
 
   let activeTab = $state("trash");
   let isBusy = $state(false);
@@ -27,6 +27,8 @@
   let preview = $state({ count: 0, titles: [] });
   let confirmOpen = $state(false);
   let confirmTargetLabel = $state("");
+  let plexmatchSavedOpen = $state(false);
+  let plexmatchSavedPath = $state("");
 
   let subsRoot = $state("");
   let subsPreview = $state({ total: 0, matched: 0, entries: [] });
@@ -546,14 +548,12 @@
   }
 
   async function savePlexmatch() {
-    if (!plexmatchOutputPath.trim()) {
-      const result = await save({
-        defaultPath: ".plexmatch",
-        filters: [{ name: "PlexMatch", extensions: ["plexmatch"] }]
-      });
-      if (!result) return;
-      plexmatchOutputPath = result;
-    }
+    const result = await save({
+      defaultPath: ".plexmatch",
+      filters: [{ name: "PlexMatch", extensions: ["plexmatch"] }]
+    });
+    if (!result) return;
+    plexmatchOutputPath = result;
     try {
       if (!plexmatchOutputPath.toLowerCase().endsWith(".plexmatch")) {
         plexmatchOutputPath = `${plexmatchOutputPath}.plexmatch`;
@@ -562,10 +562,8 @@
         path: plexmatchOutputPath,
         content: plexmatchPreview
       });
-      await message(`Saved to:\n${plexmatchOutputPath}`, {
-        title: "PlexMatch saved",
-        type: "info"
-      });
+      plexmatchSavedPath = plexmatchOutputPath;
+      plexmatchSavedOpen = true;
     } catch (error) {
       setStatus("error", `Save failed: ${error}`);
     }
@@ -1375,6 +1373,7 @@
       {:else}
         <p>Uploaded {subsUploadSummary.uploaded} subtitle file(s) successfully.</p>
       {/if}
+
       <div class="actions">
         <button
           data-variant="primary"
@@ -1386,3 +1385,21 @@
     </div>
   </div>
 {/if}
+{#if plexmatchSavedOpen}
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>PlexMatch saved</h3>
+      <p>Saved to:</p>
+      <p class="kicker">{plexmatchSavedPath}</p>
+      <div class="actions">
+        <button
+          data-variant="primary"
+          on:click={() => (plexmatchSavedOpen = false)}
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
