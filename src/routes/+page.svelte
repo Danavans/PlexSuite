@@ -731,6 +731,17 @@
   function movePointerDrag(event) {
     if (!dragActive) return;
     if (dragIndex === null) return;
+    const list = /** @type {HTMLElement | null} */ (event.currentTarget);
+    if (list) {
+      const rect = list.getBoundingClientRect();
+      const threshold = 32;
+      const speed = 12;
+      if (event.clientY < rect.top + threshold) {
+        list.scrollTop -= speed;
+      } else if (event.clientY > rect.bottom - threshold) {
+        list.scrollTop += speed;
+      }
+    }
     const el = document.elementFromPoint(event.clientX, event.clientY);
     const row = /** @type {HTMLElement | null} */ (
       el?.closest?.(".file-row") ?? null
