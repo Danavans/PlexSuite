@@ -340,7 +340,8 @@ textarea {
   margin-bottom: 14px;
 }
 
-.field label {
+.field label,
+.field .field-label {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.12em;

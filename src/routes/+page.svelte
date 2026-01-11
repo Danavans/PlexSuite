@@ -3,8 +3,35 @@
   import { invoke } from "@tauri-apps/api/core";
   import { open, save } from "@tauri-apps/plugin-dialog";
 
+  /**
+   * @typedef {"info" | "success" | "error"} StatusType
+   * @typedef {{ type: StatusType, message: string }} Status
+   * @typedef {{ id: string, title: string }} PlexLibrary
+   * @typedef {{ rating_key: string, title: string }} PlexShow
+   * @typedef {{ rating_key: string, title: string, index?: number }} PlexSeason
+   * @typedef {{ count: number, titles: string[] }} TrashPreview
+   * @typedef {{ removed: number }} PurgeSummary
+   * @typedef {{ uploaded: number, failed: number }} UploadSummary
+   * @typedef {{ total: number, matched: number, entries: SubsPreviewEntry[] }} SubsPreview
+   * @typedef {{
+   *   episodeTitle?: string,
+   *   season?: number,
+   *   episode?: number,
+   *   fileName: string,
+   *   path: string,
+   *   status: string,
+   *   episodeRatingKey?: string
+   * }} SubsPreviewEntry
+   * @typedef {{ type: string, message: string, timestamp: string, tab: string }} LogEntry
+   * @typedef {{ id: number, name: string, first_air_year?: number }} TmdbSeries
+   * @typedef {{ code: string, name: string }} TmdbEpisode
+   * @typedef {{ name: string, path: string }} VideoFile
+   * @typedef {{ code: string, fileName: string, filePath: string }} PlexmatchMapping
+   */
+
   let activeTab = $state("trash");
   let isBusy = $state(false);
+  /** @type {Status} */
   let status = $state({ type: "info", message: "" });
   let isConnected = $state(false);
   let connectionMessage = $state("");
@@ -14,43 +41,59 @@
   let tmdbKey = $state("");
   let showToken = $state(false);
 
+  /** @type {PlexLibrary[]} */
   let libraries = $state([]);
   let selectedLibraryId = $state("");
   let selectedLibraryTitle = $state("");
+  /** @type {PlexShow[]} */
   let shows = $state([]);
+  /** @type {PlexShow | null} */
   let selectedShow = $state(null);
   let selectedShowKey = $state("");
+  /** @type {PlexSeason[]} */
   let seasons = $state([]);
+  /** @type {PlexSeason | null} */
   let selectedSeason = $state(null);
   let selectedSeasonKey = $state("");
 
+  /** @type {TrashPreview} */
   let preview = $state({ count: 0, titles: [] });
   let confirmOpen = $state(false);
   let confirmTargetLabel = $state("");
+  /** @type {PurgeSummary} */
   let purgeSummary = $state({ removed: 0 });
   let purgeCompleteOpen = $state(false);
   let plexmatchSavedOpen = $state(false);
   let plexmatchSavedPath = $state("");
 
   let subsRoot = $state("");
+  /** @type {SubsPreview} */
   let subsPreview = $state({ total: 0, matched: 0, entries: [] });
   let subsUploadBusy = $state(false);
   let subsUploadPreConfirmOpen = $state(false);
   let subsUploadConfirmOpen = $state(false);
+  /** @type {UploadSummary} */
   let subsUploadSummary = $state({ uploaded: 0, failed: 0 });
   let subsExpandedKey = $state("");
+  /** @type {LogEntry[]} */
   let appLogs = $state([]);
 
   let tmdbQuery = $state("");
+  /** @type {TmdbSeries[]} */
   let tmdbResults = $state([]);
+  /** @type {TmdbEpisode[]} */
   let tmdbEpisodes = $state([]);
+  /** @type {TmdbSeries | null} */
   let selectedSeries = $state(null);
   let selectedSeriesId = $state("");
+  /** @type {string[]} */
   let selectedEpisodeCodes = $state([]);
 
   let pathDepth = $state(0);
   let plexmatchOutputPath = $state("");
+  /** @type {VideoFile[]} */
   let videoFiles = $state([]);
+  /** @type {PlexmatchMapping[]} */
   let mappings = $state([]);
   let plexmatchPreview = $state("");
   let showsRequestId = 0;
@@ -78,6 +121,10 @@
           : "Manage Plex and TMDb credentials used by the app."
   );
 
+  /**
+   * @param {StatusType} type
+   * @param {string} message
+   */
   function setStatus(type, message) {
     status = { type, message };
     const timestamp = new Date().toLocaleTimeString("en-GB", { hour12: false });
@@ -95,14 +142,27 @@
     ].slice(0, 200);
   }
 
+  /**
+   * @param {string} path
+   * @returns {string}
+   */
   function dirname(path) {
     return path.replace(/[/\\][^/\\]*$/, "");
   }
 
+  /**
+   * @param {string} path
+   * @returns {string}
+   */
   function normalizePath(path) {
     return path.replace(/\\/g, "/");
   }
 
+  /**
+   * @param {string} full
+   * @param {string} root
+   * @returns {string}
+   */
   function relativePath(full, root) {
     const normFull = normalizePath(full);
     const normRoot = normalizePath(root).replace(/\/$/, "");
@@ -115,6 +175,11 @@
     return normFull;
   }
 
+  /**
+   * @param {string} filePath
+   * @param {string | undefined} fileName
+   * @returns {string}
+   */
   function buildDisplayPath(filePath, fileName) {
     const normalized = normalizePath(filePath);
     const parts = normalized.split("/").filter(Boolean);
@@ -180,6 +245,9 @@
     }
   }
 
+  /**
+   * @param {boolean} auto
+   */
   async function connectToPlex(auto) {
     if (!serverUrl.trim() || !token.trim()) {
       connectionMessage = "Enter Plex URL and token to connect.";
@@ -227,6 +295,10 @@
     }
   }
 
+  /**
+   * @param {string | null} [query]
+   * @param {string | null} [libraryIdOverride]
+   */
   async function loadShows(query = null, libraryIdOverride = null) {
     const libraryId = libraryIdOverride ?? selectedLibraryId;
     if (!libraryId) {
@@ -263,6 +335,9 @@
     }
   }
 
+  /**
+   * @param {PlexShow | null} show
+   */
   async function loadSeasons(show) {
     if (!show) return;
     isBusy = true;
@@ -284,6 +359,9 @@
     }
   }
 
+  /**
+   * @param {PlexShow} show
+   */
   function selectShow(show) {
     selectedShow = show;
     selectedShowKey = show?.rating_key ?? "";
@@ -292,6 +370,9 @@
     loadSeasons(show);
   }
 
+  /**
+   * @param {PlexSeason | null} season
+   */
   function selectSeason(season) {
     selectedSeason = season;
     selectedSeasonKey = season?.rating_key ?? "";
@@ -333,6 +414,10 @@
   }
 
   async function confirmPurge() {
+    if (!selectedShow) {
+      setStatus("error", "Choose a show first.");
+      return;
+    }
     confirmOpen = false;
     isBusy = true;
     setStatus("info", "Purging trash...");
@@ -458,6 +543,9 @@
     }
   }
 
+  /**
+   * @param {TmdbSeries} series
+   */
   async function selectSeries(series) {
     selectedSeries = series;
     selectedSeriesId = String(series?.id ?? "");
@@ -478,10 +566,14 @@
     }
   }
 
+  /**
+   * @param {string[]} paths
+   */
   function addFilePaths(paths) {
     const next = [...videoFiles];
     for (const fullPath of paths) {
       const name = fullPath.split(/[/\\]/).pop();
+      if (!name) continue;
       const lower = name.toLowerCase();
       const ext = lower.slice(lower.lastIndexOf("."));
       if (!videoExts.has(ext)) continue;
@@ -546,6 +638,9 @@
     updatePlexmatchPreview();
   }
 
+  /**
+   * @param {number} index
+   */
   function removeMapping(index) {
     mappings = mappings.filter((_, i) => i !== index);
     updatePlexmatchPreview();
@@ -585,6 +680,9 @@
     videoFiles = [];
   }
 
+  /**
+   * @param {PlexLibrary} library
+   */
   function selectLibrary(library) {
     selectedLibraryId = library.id;
     selectedLibraryTitle = library.title;
@@ -598,21 +696,34 @@
   }
 
 
+  /** @type {number | null} */
   let dragIndex = $state(null);
+  /** @type {number | null} */
   let dragOverIndex = $state(null);
   let dragActive = $state(false);
 
+  /**
+   * @param {PointerEvent} event
+   * @param {number} index
+   */
   function startPointerDrag(event, index) {
     dragActive = true;
     dragIndex = index;
     dragOverIndex = index;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    const target = /** @type {HTMLElement} */ (event.currentTarget);
+    target.setPointerCapture(event.pointerId);
   }
 
+  /**
+   * @param {PointerEvent} event
+   */
   function movePointerDrag(event) {
     if (!dragActive) return;
+    if (dragIndex === null) return;
     const el = document.elementFromPoint(event.clientX, event.clientY);
-    const row = el?.closest?.(".file-row");
+    const row = /** @type {HTMLElement | null} */ (
+      el?.closest?.(".file-row") ?? null
+    );
     if (!row) return;
     const index = Number(row.dataset.index);
     if (Number.isNaN(index) || index === dragIndex) return;
@@ -621,14 +732,22 @@
     dragOverIndex = index;
   }
 
+  /**
+   * @param {PointerEvent} event
+   */
   function endPointerDrag(event) {
     if (!dragActive) return;
     dragActive = false;
     dragIndex = null;
     dragOverIndex = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    const target = /** @type {HTMLElement} */ (event.currentTarget);
+    target.releasePointerCapture(event.pointerId);
   }
 
+  /**
+   * @param {number} fromIndex
+   * @param {number} toIndex
+   */
   function moveFile(fromIndex, toIndex) {
     if (fromIndex < 0 || toIndex < 0) return;
     if (fromIndex === toIndex) return;
@@ -638,8 +757,13 @@
     videoFiles = next;
   }
 
+  /**
+   * @param {Event} event
+   * @returns {string[]}
+   */
   function readSelectedValues(event) {
-    return Array.from(event.currentTarget.selectedOptions).map((opt) => opt.value);
+    const target = /** @type {HTMLSelectElement} */ (event.currentTarget);
+    return Array.from(target.selectedOptions).map((opt) => opt.value);
   }
 
   onMount(() => {
@@ -673,25 +797,25 @@
         <div class="tabs">
         <button
           class:active-tab={activeTab === "trash"}
-          on:click={() => (activeTab = "trash")}
+          onclick={() => (activeTab = "trash")}
         >
           Trash Selector
         </button>
         <button
           class:active-tab={activeTab === "subs"}
-          on:click={() => (activeTab = "subs")}
+          onclick={() => (activeTab = "subs")}
         >
           Sub Uploader
         </button>
         <button
           class:active-tab={activeTab === "plexmatch"}
-          on:click={() => (activeTab = "plexmatch")}
+          onclick={() => (activeTab = "plexmatch")}
         >
           Plexmatch Generator
         </button>
         <button
           class:active-tab={activeTab === "settings"}
-          on:click={() => (activeTab = "settings")}
+          onclick={() => (activeTab = "settings")}
         >
           Settings
         </button>
@@ -739,7 +863,7 @@
             />
           </div>
         <div class="actions">
-          <button data-variant="primary" on:click={saveSettings} disabled={isBusy}>
+          <button data-variant="primary" onclick={saveSettings} disabled={isBusy}>
             Save & Connect
           </button>
         </div>
@@ -749,7 +873,7 @@
         <div class="actions">
           <button
             data-variant="ghost"
-            on:click={() => {
+            onclick={() => {
               appLogs = [];
             }}
           >
@@ -781,7 +905,7 @@
             <select
               id="library"
               bind:value={selectedLibraryId}
-              on:change={(event) => {
+              onchange={(event) => {
                 const key = event.currentTarget.value;
                 if (key) {
                   const library = libraries.find((item) => item.id === key);
@@ -809,7 +933,7 @@
             <select
               id="trash-show"
               bind:value={selectedShowKey}
-              on:change={(event) => {
+              onchange={(event) => {
                 const key = event.currentTarget.value;
                 const show = shows.find((item) => item.rating_key === key);
                 if (show) {
@@ -834,7 +958,7 @@
             <select
               id="trash-season"
               bind:value={selectedSeasonKey}
-              on:change={(event) => {
+              onchange={(event) => {
                 const key = event.currentTarget.value;
                 const season = seasons.find((item) => item.rating_key === key);
                 if (season) {
@@ -882,21 +1006,21 @@
           <div class="actions" style="margin-top: 18px;">
             <button
               data-variant="primary"
-              on:click={openPurgeConfirm}
+              onclick={openPurgeConfirm}
               disabled={!selectedShow || isBusy}
             >
               Purge Trash
             </button>
             <button
               data-variant="ghost"
-              on:click={previewTrash}
+              onclick={previewTrash}
               disabled={!selectedShow || isBusy}
             >
               Dry Run
             </button>
             <button
               data-variant="ghost"
-              on:click={() => {
+              onclick={() => {
                 selectedShow = null;
                 selectedShowKey = "";
                 selectedSeason = null;
@@ -923,7 +1047,7 @@
             <select
               id="library"
               bind:value={selectedLibraryId}
-              on:change={(event) => {
+              onchange={(event) => {
                 const key = event.currentTarget.value;
                 if (key) {
                   const library = libraries.find((item) => item.id === key);
@@ -951,7 +1075,7 @@
             <select
               id="show-select"
               bind:value={selectedShowKey}
-              on:change={(event) => {
+              onchange={(event) => {
                 const key = event.currentTarget.value;
                 const show = shows.find((item) => item.rating_key === key);
                 if (show) {
@@ -975,7 +1099,7 @@
             <select
               id="season-select"
               bind:value={selectedSeasonKey}
-              on:change={(event) => {
+              onchange={(event) => {
                 const key = event.currentTarget.value;
                 const season = seasons.find((item) => item.rating_key === key);
                 if (season) {
@@ -998,7 +1122,7 @@
         <div class="panel subs-source lift-2">
           <h2>Subtitle Source</h2>
           <div class="actions">
-            <button data-variant="ghost" on:click={pickSubsFolder}>
+            <button data-variant="ghost" onclick={pickSubsFolder}>
               Choose folder
             </button>
           </div>
@@ -1013,14 +1137,14 @@
           <div class="actions">
             <button
               data-variant="ghost"
-              on:click={previewSubtitles}
+              onclick={previewSubtitles}
               disabled={!selectedShow || isBusy}
             >
               Preview Mapping
             </button>
             <button
               data-variant="primary"
-              on:click={() => (subsUploadPreConfirmOpen = true)}
+              onclick={() => (subsUploadPreConfirmOpen = true)}
               disabled={subsPreview.matched === 0 || subsUploadBusy}
             >
               Upload Subtitles
@@ -1054,8 +1178,17 @@
                     class="subs-bubble subs-file"
                     class:expanded={subsExpandedKey === entry.path}
                     title={entry.fileName}
-                    on:click={() => {
+                    role="button"
+                    tabindex="0"
+                    onclick={() => {
                       subsExpandedKey = subsExpandedKey === entry.path ? "" : entry.path;
+                    }}
+                    onkeydown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        subsExpandedKey =
+                          subsExpandedKey === entry.path ? "" : entry.path;
+                      }
                     }}
                   >
                     {entry.fileName}
@@ -1084,14 +1217,14 @@
               id="tmdb-search"
               placeholder="Type a series name"
               bind:value={tmdbQuery}
-              on:keydown={(event) => {
+              onkeydown={(event) => {
                 if (event.key === "Enter") {
                   searchTmdb();
                 }
               }}
             />
           </div>
-          <button data-variant="ghost" on:click={searchTmdb} disabled={isBusy}>
+          <button data-variant="ghost" onclick={searchTmdb} disabled={isBusy}>
             Search TMDb
           </button>
           <div class="field">
@@ -1099,7 +1232,7 @@
             <select
               id="tmdb-series"
               bind:value={selectedSeriesId}
-              on:change={(event) => {
+              onchange={(event) => {
                 const id = Number(event.currentTarget.value);
                 const series = tmdbResults.find((item) => item.id === id);
                 if (series) {
@@ -1127,21 +1260,21 @@
       <div class="panel lift-2">
         <h2>TMDb Episodes</h2>
         <div class="actions">
-          <button data-variant="ghost" on:click={selectAllEpisodes}>
+          <button data-variant="ghost" onclick={selectAllEpisodes}>
             Select all
           </button>
-          <button data-variant="ghost" on:click={clearEpisodeSelection}>
+          <button data-variant="ghost" onclick={clearEpisodeSelection}>
             Clear selection
           </button>
         </div>
         <div class="field" style="margin-top: 10px;">
-          <label>Episodes</label>
+          <label for="tmdb-episodes">Episodes</label>
           <select
             id="tmdb-episodes"
             multiple
             size="16"
             bind:value={selectedEpisodeCodes}
-            on:change={(event) => {
+            onchange={(event) => {
               selectedEpisodeCodes = readSelectedValues(event);
             }}
             class="fixed-list"
@@ -1158,20 +1291,20 @@
       <div class="panel lift-3">
         <h2>Video Files</h2>
         <div class="actions">
-          <button data-variant="ghost" on:click={pickVideoFiles}>
+          <button data-variant="ghost" onclick={pickVideoFiles}>
             Add files
           </button>
-          <button data-variant="ghost" on:click={clearVideoFiles}>
+          <button data-variant="ghost" onclick={clearVideoFiles}>
             Clear list
           </button>
         </div>
         <div class="field" style="margin-top: 10px;">
-          <label>Files (drag to reorder)</label>
+          <span class="field-label">Files (drag to reorder)</span>
           <div
             class="select-list fixed-list"
-            on:pointermove={movePointerDrag}
-            on:pointerup={endPointerDrag}
-            on:pointerleave={endPointerDrag}
+            onpointermove={movePointerDrag}
+            onpointerup={endPointerDrag}
+            onpointerleave={endPointerDrag}
           >
             {#if videoFiles.length === 0}
               <div class="kicker">No files added yet.</div>
@@ -1184,7 +1317,7 @@
                   <span
                     class="drag-handle"
                     title="Drag"
-                    on:pointerdown={(event) => startPointerDrag(event, index)}
+                    onpointerdown={(event) => startPointerDrag(event, index)}
                   >
                     ::
                   </span>
@@ -1196,7 +1329,7 @@
                       aria-label="Move up"
                       title="Move up"
                       disabled={index === 0}
-                      on:click={() => moveFile(index, index - 1)}
+                      onclick={() => moveFile(index, index - 1)}
                     >
                       ▲
                     </button>
@@ -1205,7 +1338,7 @@
                       aria-label="Move down"
                       title="Move down"
                       disabled={index === videoFiles.length - 1}
-                      on:click={() => moveFile(index, index + 1)}
+                      onclick={() => moveFile(index, index + 1)}
                     >
                       ▼
                     </button>
@@ -1222,12 +1355,12 @@
       <div class="panel lift-2">
         <h2>Mapping</h2>
         <div class="actions">
-          <button data-variant="mint" on:click={mapSelected}>
+          <button data-variant="mint" onclick={mapSelected}>
             Map selected
           </button>
           <button
             data-variant="ghost"
-            on:click={() => {
+            onclick={() => {
               mappings = [];
               updatePlexmatchPreview();
             }}
@@ -1254,7 +1387,7 @@
                   class="icon-btn"
                   aria-label="Remove mapping"
                   title="Remove"
-                  on:click={() => removeMapping(index)}
+                  onclick={() => removeMapping(index)}
                 >
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path
@@ -1276,32 +1409,33 @@
         <div class="preferences-grid">
             <div>
               <div class="field">
-                <label>Path depth</label>
+                <span class="field-label">Path depth</span>
                 <div class="inline-field">
-                  <button data-variant="ghost" on:click={decreasePathDepth}>
+                  <button data-variant="ghost" onclick={decreasePathDepth}>
                     -
                   </button>
                   <div class="depth-pill">{pathDepth}</div>
-                  <button data-variant="ghost" on:click={increasePathDepth}>
+                  <button data-variant="ghost" onclick={increasePathDepth}>
                     +
                   </button>
                   <span class="kicker">0 = parent folder only</span>
                 </div>
               </div>
               <div class="field">
-                <label>Export</label>
+                <span class="field-label">Export</span>
                 <div class="actions">
-                  <button data-variant="primary" on:click={savePlexmatch}>
+                  <button data-variant="primary" onclick={savePlexmatch}>
                     Save .plexmatch
                   </button>
                 </div>
               </div>
             </div>
             <div class="field">
-              <label>Plexmatch preview</label>
-              <textarea readonly rows="8" bind:value={plexmatchPreview}></textarea>
+              <label for="plexmatch-preview">Plexmatch preview</label>
+              <textarea id="plexmatch-preview" readonly rows="8" bind:value={plexmatchPreview}></textarea>
             </div>
           </div>
+        </div>
     </section>
     {/if}
 </main>
@@ -1318,10 +1452,10 @@
         This will remove all trashed items for <strong>{confirmTargetLabel}</strong>.
       </p>
       <div class="actions">
-        <button data-variant="ghost" on:click={() => (confirmOpen = false)}>
+        <button data-variant="ghost" onclick={() => (confirmOpen = false)}>
           Cancel
         </button>
-        <button data-variant="primary" on:click={confirmPurge} disabled={isBusy}>
+        <button data-variant="primary" onclick={confirmPurge} disabled={isBusy}>
           Purge Trash
         </button>
       </div>
@@ -1337,7 +1471,7 @@
       <div class="actions">
         <button
           data-variant="primary"
-          on:click={() => (purgeCompleteOpen = false)}
+          onclick={() => (purgeCompleteOpen = false)}
         >
           Done
         </button>
@@ -1366,13 +1500,13 @@
       <div class="actions">
         <button
           data-variant="ghost"
-          on:click={() => (subsUploadPreConfirmOpen = false)}
+          onclick={() => (subsUploadPreConfirmOpen = false)}
         >
           Cancel
         </button>
         <button
           data-variant="primary"
-          on:click={() => {
+          onclick={() => {
             subsUploadPreConfirmOpen = false;
             uploadSubtitles();
           }}
@@ -1401,7 +1535,7 @@
       <div class="actions">
         <button
           data-variant="primary"
-          on:click={() => (subsUploadConfirmOpen = false)}
+          onclick={() => (subsUploadConfirmOpen = false)}
         >
           Done
         </button>
@@ -1418,7 +1552,7 @@
       <div class="actions">
         <button
           data-variant="primary"
-          on:click={() => (plexmatchSavedOpen = false)}
+          onclick={() => (plexmatchSavedOpen = false)}
         >
           Done
         </button>
