@@ -707,11 +707,22 @@
    * @param {number} index
    */
   function startPointerDrag(event, index) {
+    if (event.button !== 0) return;
+    const target = event.target;
+    if (target instanceof HTMLElement) {
+      if (target.closest(".reorder-buttons") || target.closest("button")) {
+        return;
+      }
+    }
     dragActive = true;
     dragIndex = index;
     dragOverIndex = index;
-    const target = /** @type {HTMLElement} */ (event.currentTarget);
-    target.setPointerCapture(event.pointerId);
+    const list = /** @type {HTMLElement | null} */ (
+      event.currentTarget?.closest?.(".select-list") ?? null
+    );
+    const captureTarget = list ?? /** @type {HTMLElement} */ (event.currentTarget);
+    captureTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
   }
 
   /**
@@ -1313,14 +1324,8 @@
                 <div
                   class={`select-item file-row ${dragOverIndex === index ? "drag-over" : ""} ${dragIndex === index ? "dragging" : ""}`}
                   data-index={index}
+                  on:pointerdown={/** @param {PointerEvent} event */ (event) => startPointerDrag(event, index)}
                 >
-                  <span
-                    class="drag-handle"
-                    title="Drag"
-                    on:pointerdown={/** @param {PointerEvent} event */ (event) => startPointerDrag(event, index)}
-                  >
-                    ::
-                  </span>
                   <span class="file-index">{index + 1}.</span>
                   <span class="file-name">{file.name}</span>
                   <div class="reorder-buttons">
