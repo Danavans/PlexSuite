@@ -732,6 +732,11 @@
   /** @type {number | null} */
   let mappingDragOverIndex = $state(null);
   let mappingDragActive = $state(false);
+  /** @type {number | null} */
+  let mappingEpisodeDragIndex = $state(null);
+  /** @type {number | null} */
+  let mappingEpisodeDragOverIndex = $state(null);
+  let mappingEpisodeDragActive = $state(false);
 
   /**
    * @param {PointerEvent} event
@@ -814,6 +819,9 @@
         return;
       }
     }
+    mappingEpisodeDragActive = false;
+    mappingEpisodeDragIndex = null;
+    mappingEpisodeDragOverIndex = null;
     mappingDragActive = true;
     mappingDragIndex = index;
     mappingDragOverIndex = index;
@@ -827,10 +835,35 @@
 
   /**
    * @param {PointerEvent} event
+   * @param {number} index
+   */
+  function startMappingEpisodeDrag(event, index) {
+    if (event.button !== 0) return;
+    const target = event.target;
+    if (target instanceof HTMLElement) {
+      if (target.closest("button")) {
+        return;
+      }
+    }
+    mappingDragActive = false;
+    mappingDragIndex = null;
+    mappingDragOverIndex = null;
+    mappingEpisodeDragActive = true;
+    mappingEpisodeDragIndex = index;
+    mappingEpisodeDragOverIndex = index;
+    const list = /** @type {HTMLElement | null} */ (
+      event.currentTarget?.closest?.(".mapping-table") ?? null
+    );
+    const captureTarget = list ?? /** @type {HTMLElement} */ (event.currentTarget);
+    captureTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  }
+
+  /**
+   * @param {PointerEvent} event
    */
   function moveMappingDrag(event) {
-    if (!mappingDragActive) return;
-    if (mappingDragIndex === null) return;
+    if (!mappingDragActive && !mappingEpisodeDragActive) return;
     const list = /** @type {HTMLElement | null} */ (event.currentTarget);
     if (list) {
       const rect = list.getBoundingClientRect();
@@ -853,20 +886,31 @@
     );
     if (!row) return;
     const index = Number(row.dataset.index);
-    if (Number.isNaN(index) || index === mappingDragIndex) return;
-    moveMappingFile(mappingDragIndex, index);
-    mappingDragIndex = index;
-    mappingDragOverIndex = index;
+    if (Number.isNaN(index)) return;
+    if (mappingDragActive) {
+      if (mappingDragIndex === null || index === mappingDragIndex) return;
+      moveMappingFile(mappingDragIndex, index);
+      mappingDragIndex = index;
+      mappingDragOverIndex = index;
+      return;
+    }
+    if (mappingEpisodeDragIndex === null || index === mappingEpisodeDragIndex) return;
+    moveMappingEpisode(mappingEpisodeDragIndex, index);
+    mappingEpisodeDragIndex = index;
+    mappingEpisodeDragOverIndex = index;
   }
 
   /**
    * @param {PointerEvent} event
    */
   function endMappingDrag(event) {
-    if (!mappingDragActive) return;
+    if (!mappingDragActive && !mappingEpisodeDragActive) return;
     mappingDragActive = false;
     mappingDragIndex = null;
     mappingDragOverIndex = null;
+    mappingEpisodeDragActive = false;
+    mappingEpisodeDragIndex = null;
+    mappingEpisodeDragOverIndex = null;
     const target = /** @type {HTMLElement} */ (event.currentTarget);
     target.releasePointerCapture(event.pointerId);
   }
@@ -903,6 +947,24 @@
       ...item,
       fileName: files[index].fileName,
       filePath: files[index].filePath
+    }));
+  }
+
+  /**
+   * @param {number} fromIndex
+   * @param {number} toIndex
+   */
+  function moveMappingEpisode(fromIndex, toIndex) {
+    if (fromIndex < 0 || toIndex < 0) return;
+    if (fromIndex === toIndex) return;
+    const next = [...mappings];
+    const codes = next.map((item) => item.code);
+    const [moved] = codes.splice(fromIndex, 1);
+    if (!moved) return;
+    codes.splice(toIndex, 0, moved);
+    mappings = next.map((item, index) => ({
+      ...item,
+      code: codes[index]
     }));
   }
 
@@ -1511,7 +1573,12 @@
                 class="table-row mapping-row"
                 data-index={index}
               >
-                <span class="mapping-episode">{map.code}</span>
+                <span
+                  class={`mapping-episode ${mappingEpisodeDragOverIndex === index ? "drag-over" : ""} ${mappingEpisodeDragIndex === index ? "dragging" : ""}`}
+                  on:pointerdown={/** @param {PointerEvent} event */ (event) => startMappingEpisodeDrag(event, index)}
+                >
+                  {map.code}
+                </span>
                 <span
                   class={`file-column mapping-file ${mappingDragOverIndex === index ? "drag-over" : ""} ${mappingDragIndex === index ? "dragging" : ""}`}
                   on:pointerdown={/** @param {PointerEvent} event */ (event) => startMappingDrag(event, index)}
