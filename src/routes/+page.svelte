@@ -1134,7 +1134,7 @@
             Clear selection
           </button>
         </div>
-        <div class="field">
+        <div class="field" style="margin-top: 10px;">
           <label>Episodes</label>
           <select
             id="tmdb-episodes"
@@ -1165,7 +1165,7 @@
             Clear list
           </button>
         </div>
-        <div class="field">
+        <div class="field" style="margin-top: 10px;">
           <label>Files (drag to reorder)</label>
           <div
             class="select-list fixed-list"
