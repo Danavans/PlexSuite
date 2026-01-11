@@ -38,8 +38,8 @@ npm run tauri build
 ```
 
 Output:
-- Windows: `src-tauri/target/release/plex-suite.exe`
-- Linux: `src-tauri/target/release/plex-suite`
+- Windows: `src-tauri/target/release/PlexSuite.exe`
+- Linux: `src-tauri/target/release/PlexSuite`
 
 ## Getting a Plex token
 1. Open Plex Web in a browser and sign in.
