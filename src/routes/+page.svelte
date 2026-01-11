@@ -710,7 +710,7 @@
     if (event.button !== 0) return;
     const target = event.target;
     if (target instanceof HTMLElement) {
-      if (target.closest(".reorder-buttons") || target.closest("button")) {
+      if (target.closest("button")) {
         return;
       }
     }
@@ -1327,27 +1327,7 @@
                   on:pointerdown={/** @param {PointerEvent} event */ (event) => startPointerDrag(event, index)}
                 >
                   <span class="file-index">{index + 1}.</span>
-                  <span class="file-name">{file.name}</span>
-                  <div class="reorder-buttons">
-                    <button
-                      class="icon-btn small"
-                      aria-label="Move up"
-                      title="Move up"
-                      disabled={index === 0}
-                      on:click={() => moveFile(index, index - 1)}
-                    >
-                      ▲
-                    </button>
-                    <button
-                      class="icon-btn small"
-                      aria-label="Move down"
-                      title="Move down"
-                      disabled={index === videoFiles.length - 1}
-                      on:click={() => moveFile(index, index + 1)}
-                    >
-                      ▼
-                    </button>
-                  </div>
+                  <span class="file-name">{file.name}</span>
                 </div>
               {/each}
             {/if}
