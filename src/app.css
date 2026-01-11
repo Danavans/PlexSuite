@@ -413,7 +413,8 @@ textarea {
   display: grid;
   gap: 6px;
   max-height: 380px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 8px;
   border-radius: 12px;
   border: 1px solid var(--stroke);
@@ -445,6 +446,11 @@ textarea {
   font-weight: 500;
   cursor: grab;
   user-select: none;
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .select-item input {
