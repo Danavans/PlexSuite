@@ -872,9 +872,9 @@
         </div>
 
         <div class="panel trash-actions lift-3">
-          <h2>Seasons & Action</h2>
+          <h2>Purge Controls</h2>
           <div class="kicker">
-            Use the Season dropdown to narrow the purge scope.
+            Run a dry run to review matches, then purge trash for the selected show or season.
           </div>
           <div class="actions" style="margin-top: 18px;">
             <button
