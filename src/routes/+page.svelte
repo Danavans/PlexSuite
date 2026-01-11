@@ -1235,7 +1235,7 @@
             Clear mapping
           </button>
         </div>
-        <div class="table">
+        <div class="table" style="margin-top: 10px;">
           <div class="table-header">
             <span>Episode</span>
             <span class="file-column">File</span>
