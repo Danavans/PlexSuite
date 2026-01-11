@@ -734,11 +734,16 @@
     const list = /** @type {HTMLElement | null} */ (event.currentTarget);
     if (list) {
       const rect = list.getBoundingClientRect();
-      const threshold = 32;
-      const speed = 12;
+      const threshold = 36;
+      const minSpeed = 2;
+      const maxSpeed = 12;
       if (event.clientY < rect.top + threshold) {
+        const proximity = (rect.top + threshold - event.clientY) / threshold;
+        const speed = Math.round(minSpeed + proximity * (maxSpeed - minSpeed));
         list.scrollTop -= speed;
       } else if (event.clientY > rect.bottom - threshold) {
+        const proximity = (event.clientY - (rect.bottom - threshold)) / threshold;
+        const speed = Math.round(minSpeed + proximity * (maxSpeed - minSpeed));
         list.scrollTop += speed;
       }
     }
