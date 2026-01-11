@@ -773,7 +773,7 @@
       <section class="grid trash-grid">
         <div class="panel trash-library lift-1">
           <h2>Library Scope</h2>
-          <div class="kicker">
+          <div class="kicker" style="margin-bottom: 10px;">
             Choose a library, show, and optional season to define the purge scope.
           </div>
           <div class="field">
@@ -852,7 +852,7 @@
               {/each}
             </select>
           </div>
-          <p class="kicker" style="margin-top: 12px;">
+          <p class="kicker" style="margin-top: 6px;">
             Selected: {selectedShow?.title || "None"}
             {#if selectedSeason}
               - {selectedSeason.title}
