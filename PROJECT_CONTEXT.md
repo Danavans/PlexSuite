@@ -26,12 +26,15 @@
 - Choix dossier via bouton (pas de drag/drop).
 - Champ Episode optionnel supprime.
 - Preview affiche episode a gauche (format `S01E01 - Title`) et subtitle a droite, en bulles 50/50.
+- Mapping Interactif: Drag & Drop supporté pour corriger manuellement l'association fichier <-> épisode.
+- Interaction: Clic pour étendre le nom du fichier (multi-ligne), Drag pour déplacer.
 - Statut affiche un rond vert (meme couleur que connected) si matched.
 - Upload corrige: endpoint Plex utilise `/library/metadata/{ratingKey}/subtitles` avec body raw + params title/format.
 
 ## Plexmatch Generator (etat actuel)
 - Layout stable avec mapping auto par ordre.
-- Reorder fichiers via drag-handle + boutons up/down.
+- Liste Fichiers: Reorder via drag-and-drop. Interaction unifiée "Clic pour étendre / Drag pour déplacer".
+- Correctif CSS: Noms de fichiers longs tronqués proprement (pas de débordement sous la scrollbar).
 - Root path depth: 0 = dossier parent, -1 = fichier seul, +n = remonte.
 - Save .plexmatch via dialog uniquement.
 - Confirmation de sauvegarde en modal theme, dialog affiche a chaque export.
@@ -41,6 +44,11 @@
 - Target mode supprime.
 - Preview list et actions se partagent la colonne gauche/droite.
 - Confirmation purge + modal de fin de purge en theme app.
+
+## Architecture (Refactoring Janvier 2026)
+- Modularité: Application découpée en composants Svelte (`TrashTab`, `SubsTab`, `PlexmatchTab`, `SettingsTab`).
+- État Centralisé: `appState.svelte.js` gère la logique métier et les données partagées via Svelte 5 Runes.
+- Syntaxe: Migration complète vers Svelte 5 (`onclick`, `$state`).
 
 ## Logs
 - Nouveau panneau Logs dans Settings, alimente par setStatus().
@@ -56,7 +64,9 @@
 - Dossiers safe a supprimer: `src-tauri/target`, `node_modules`, `.svelte-kit`, `build`.
 
 ## Fichiers modifies principaux
-- `src/routes/+page.svelte`: layout onglets, logique Trash/Subs/Plexmatch, logs, UI changes.
+- `src/lib/appState.svelte.js`: Store central.
+- `src/lib/components/*.svelte`: Composants par onglet.
+- `src/routes/+page.svelte`: Layout controller.
 - `src/app.css`: theme global, layout grids, status dot, subs preview bubbles, etc.
 - `src/app.html`: racine `#app-root` pour background global.
 - `src-tauri/src/plex.rs`: upload subtitles via metadata endpoint.
@@ -76,9 +86,9 @@
 - Stack par defaut: Tauri + Svelte + theme PlexSuite. Pas d'installers par defaut.
 
 ## Changelog
+- 2026-01-12 22:50:00: Refactoring: Component split, Svelte 5 migration, Unified Drag & Drop + Click-to-expand UI for Subs and PlexMatch tabs.
 - 2026-01-11 19:50:00: PlexMatch drag reorder from full file rows, remove reorder handle/arrows, auto-scroll while dragging, mapping drag for files and episodes with column-only feedback, wrap long file names without horizontal scroll, clamp path depth to max parent depth, replace mapping remove icon with blocked circle.
 - 2026-01-11 19:50:00: PlexMatch save confirm modal + dialog always prompts, Trash purge completion modal, copy + spacing tweaks, PlexMatch spacing/preview width refinements.
 - 2026-01-09 21:28:51: Update layouts (Trash/Subs), subtitle upload fix (metadata endpoint), logs panel added, tab names renamed, PlexMatch tweaks, dark theme refinements.
 - 2026-01-09 21:45:12: Sub uploader preview formatting, status dot styling, logs + settings updates, icon generation, README updated, bundle config adjustments.
 - 2026-01-10 00:00:00: Header rework (badges alignes, tabs a gauche, description a droite), tabs style/animations, panel lift animations, settings panel aligne a gauche, window height 815, badge size adjustments.
-
