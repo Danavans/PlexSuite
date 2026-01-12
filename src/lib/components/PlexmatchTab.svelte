@@ -636,7 +636,7 @@
     <div class="field" style="margin-top: 10px;">
       <span class="field-label">Files (drag to reorder)</span>
       <div
-        class="select-list fixed-list file-list"
+        class="select-list fixed-list"
         onpointermove={movePointerDrag}
         onpointerup={endPointerDrag}
         onpointerleave={endPointerDrag}
@@ -651,7 +651,7 @@
               onpointerdown={/** @param {PointerEvent} event */ (event) => startPointerDrag(event, index)}
             >
               <span class="file-index">{index + 1}.</span>
-              <span class="file-name plexmatch-file">
+              <span class="file-name">
                 {file.name}
               </span>
             </div>
@@ -796,34 +796,3 @@
     </div>
   </div>
 {/if}
-
-<style>
-  .file-list {
-    scrollbar-gutter: stable;
-    align-content: start;
-    grid-auto-rows: max-content;
-  }
-  .file-list .file-row {
-    width: calc(100% - 20px);
-    box-sizing: border-box;
-    min-height: 30px;
-    align-items: center;
-    align-self: start;
-  }
-  .file-row.expanded {
-    align-items: flex-start;
-  }
-  .select-item {
-    transition: transform 0.12s ease, box-shadow 0.12s ease, padding 0.12s ease;
-  }
-  .plexmatch-file {
-    display: block;
-    flex: 1;
-    min-width: 0;
-    white-space: normal;
-    overflow: visible;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    line-height: 1.35;
-  }
-</style>
