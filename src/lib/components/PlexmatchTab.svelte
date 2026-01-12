@@ -273,12 +273,20 @@
     return Array.from(target.selectedOptions).map((opt) => opt.value);
   }
 
-  // Drag and Drop Logic
+  // --- Drag and Drop Logic ---
+
+  // UI State for Expanded Files
+  /** @type {number | null} */
+  let expandedFileIndex = $state(null);
+
   /** @type {number | null} */
   let dragIndex = $state(null);
   /** @type {number | null} */
   let dragOverIndex = $state(null);
   let dragActive = $state(false);
+  let hasMoved = $state(false);
+
+  // Mapping Drag State
   /** @type {number | null} */
   let mappingDragIndex = $state(null);
   /** @type {number | null} */
@@ -297,6 +305,7 @@
   function startPointerDrag(event, index) {
     if (event.button !== 0) return;
     const target = event.target;
+    // Don't drag if clicking button inside (though there are none currently)
     if (target instanceof HTMLElement) {
       if (target.closest("button")) {
         return;
@@ -305,8 +314,8 @@
     dragActive = true;
     dragIndex = index;
     dragOverIndex = index;
-    
-    // Explicit casting to HTMLElement to access .closest()
+    hasMoved = false;
+
     const currentTarget = /** @type {HTMLElement} */ (event.currentTarget);
     const list = currentTarget.closest(".select-list");
     
@@ -320,33 +329,32 @@
    */
   function movePointerDrag(event) {
     if (!dragActive) return;
-    if (dragIndex === null) return;
-    const list = /** @type {HTMLElement | null} */ (event.currentTarget);
-    if (list) {
-      const rect = list.getBoundingClientRect();
-      const threshold = 36;
-      const minSpeed = 2;
-      const maxSpeed = 12;
-      if (event.clientY < rect.top + threshold) {
-        const proximity = (rect.top + threshold - event.clientY) / threshold;
-        const speed = Math.round(minSpeed + proximity * (maxSpeed - minSpeed));
-        list.scrollTop -= speed;
-      } else if (event.clientY > rect.bottom - threshold) {
-        const proximity = (event.clientY - (rect.bottom - threshold)) / threshold;
-        const speed = Math.round(minSpeed + proximity * (maxSpeed - minSpeed));
-        list.scrollTop += speed;
-      }
+    
+    const currentTarget = /** @type {HTMLElement} */ (event.currentTarget);
+    const rect = currentTarget.getBoundingClientRect();
+    const threshold = 36;
+    if (event.clientY < rect.top + threshold) {
+      currentTarget.scrollTop -= 8;
+    } else if (event.clientY > rect.bottom - threshold) {
+      currentTarget.scrollTop += 8;
     }
+
     const el = document.elementFromPoint(event.clientX, event.clientY);
     const row = /** @type {HTMLElement | null} */ (
       el?.closest?.(".file-row") ?? null
     );
     if (!row) return;
+    
     const index = Number(row.dataset.index);
     if (Number.isNaN(index) || index === dragIndex) return;
-    moveFile(dragIndex, index);
-    dragIndex = index;
-    dragOverIndex = index;
+    
+    // If we move to a different index, it's a drag
+    hasMoved = true;
+    if (dragIndex !== null) {
+      moveFile(dragIndex, index);
+      dragIndex = index;
+      dragOverIndex = index;
+    }
   }
 
   /**
@@ -354,6 +362,16 @@
    */
   function endPointerDrag(event) {
     if (!dragActive) return;
+    
+    // Click detection
+    if (!hasMoved && dragIndex !== null) {
+      if (expandedFileIndex === dragIndex) {
+        expandedFileIndex = null;
+      } else {
+        expandedFileIndex = dragIndex;
+      }
+    }
+
     dragActive = false;
     dragIndex = null;
     dragOverIndex = null;
@@ -420,29 +438,25 @@
    */
   function moveMappingDrag(event) {
     if (!mappingDragActive && !mappingEpisodeDragActive) return;
-    const list = /** @type {HTMLElement | null} */ (event.currentTarget);
-    if (list) {
-      const rect = list.getBoundingClientRect();
-      const threshold = 36;
-      const minSpeed = 2;
-      const maxSpeed = 12;
-      if (event.clientY < rect.top + threshold) {
-        const proximity = (rect.top + threshold - event.clientY) / threshold;
-        const speed = Math.round(minSpeed + proximity * (maxSpeed - minSpeed));
-        list.scrollTop -= speed;
-      } else if (event.clientY > rect.bottom - threshold) {
-        const proximity = (event.clientY - (rect.bottom - threshold)) / threshold;
-        const speed = Math.round(minSpeed + proximity * (maxSpeed - minSpeed));
-        list.scrollTop += speed;
-      }
+    
+    const currentTarget = /** @type {HTMLElement} */ (event.currentTarget);
+    const rect = currentTarget.getBoundingClientRect();
+    const threshold = 36;
+    if (event.clientY < rect.top + threshold) {
+      currentTarget.scrollTop -= 8;
+    } else if (event.clientY > rect.bottom - threshold) {
+      currentTarget.scrollTop += 8;
     }
+
     const el = document.elementFromPoint(event.clientX, event.clientY);
     const row = /** @type {HTMLElement | null} */ (
       el?.closest?.(".mapping-row") ?? null
     );
     if (!row) return;
+    
     const index = Number(row.dataset.index);
     if (Number.isNaN(index)) return;
+    
     if (mappingDragActive) {
       if (mappingDragIndex === null || index === mappingDragIndex) return;
       moveMappingFile(mappingDragIndex, index);
@@ -480,6 +494,7 @@
     if (fromIndex === toIndex) return;
     const next = [...videoFiles];
     const [moved] = next.splice(fromIndex, 1);
+    if (!moved) return;
     next.splice(toIndex, 0, moved);
     videoFiles = next;
   }
@@ -551,7 +566,8 @@
           id="tmdb-series"
           bind:value={selectedSeriesId}
           onchange={/** @param {Event} event */ (event) => {
-            const id = Number(event.currentTarget.value);
+            const target = /** @type {HTMLSelectElement} */ (event.target);
+            const id = Number(target.value);
             const series = tmdbResults.find((item) => item.id === id);
             if (series) {
               selectSeries(series);
@@ -593,7 +609,8 @@
         size="16"
         bind:value={selectedEpisodeCodes}
         onchange={/** @param {Event} event */ (event) => {
-          selectedEpisodeCodes = readSelectedValues(event);
+          const target = /** @type {HTMLSelectElement} */ (event.target);
+          selectedEpisodeCodes = Array.from(target.selectedOptions).map((opt) => opt.value);
         }}
         class="fixed-list"
       >
@@ -629,7 +646,7 @@
         {:else}
           {#each videoFiles as file, index (file.path)}
             <div
-              class={`select-item file-row ${dragOverIndex === index ? "drag-over" : ""} ${dragIndex === index ? "dragging" : ""}`}
+              class={`select-item file-row ${dragOverIndex === index ? "drag-over" : ""} ${dragIndex === index ? "dragging" : ""} ${expandedFileIndex === index ? "expanded" : ""}`}
               data-index={index}
               onpointerdown={/** @param {PointerEvent} event */ (event) => startPointerDrag(event, index)}
             >
@@ -777,3 +794,18 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .select-item {
+    transition: transform 0.12s ease, box-shadow 0.12s ease, padding 0.12s ease;
+  }
+  .select-item .file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .select-item.expanded .file-name {
+    white-space: normal;
+    overflow: visible;
+  }
+</style>
