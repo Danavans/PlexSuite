@@ -539,10 +539,11 @@
   }
   /* Ensure column alignment */
   .subs-row {
-    grid-template-columns: 1fr 1fr 32px;
+    grid-template-columns: 1fr 1fr 20px;
+    gap: 4px;
   }
   .subs-header {
-    grid-template-columns: 1fr 1fr 32px;
+    grid-template-columns: 1fr 1fr 20px;
     padding: 0 12px;
   }
 </style>
