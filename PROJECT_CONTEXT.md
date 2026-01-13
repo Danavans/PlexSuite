@@ -16,6 +16,7 @@
 - Onglet Settings = credentials + logs (pas de popup obligatoire au demarrage).
 - Header: badges "PlexSuite" a gauche et "Connected" a droite sur la meme ligne; onglets a gauche, description a droite.
 - Tabs en style pilule (container + boutons actifs dynamiques), avec animations de chargement type "rise".
+- Initialisation: Aucune library selectionnee par defaut au lancement ("Select a library"). Reset selection si on revient sur l'option par defaut.
 
 ## Onglets et layouts
 - Trash Selector: layout 2 colonnes / 2 lignes. Gauche: Library Scope (haut) + Purge Controls (bas). Droite: Preview List (colonne pleine). Preview List scroll interne max-height 480px.
@@ -86,6 +87,7 @@
 - Stack par defaut: Tauri + Svelte + theme PlexSuite. Pas d'installers par defaut.
 
 ## Changelog
+- 2026-01-13 05:30:00: Startup: Default library selection set to empty ("Select a library"). SubsTab resets selection when library cleared.
 - 2026-01-12 22:50:00: Refactoring: Component split, Svelte 5 migration, Unified Drag & Drop + Click-to-expand UI for Subs and PlexMatch tabs.
 - 2026-01-11 19:50:00: PlexMatch drag reorder from full file rows, remove reorder handle/arrows, auto-scroll while dragging, mapping drag for files and episodes with column-only feedback, wrap long file names without horizontal scroll, clamp path depth to max parent depth, replace mapping remove icon with blocked circle.
 - 2026-01-11 19:50:00: PlexMatch save confirm modal + dialog always prompts, Trash purge completion modal, copy + spacing tweaks, PlexMatch spacing/preview width refinements.
