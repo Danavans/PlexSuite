@@ -125,7 +125,7 @@ class AppState {
         try {
             const data = await invoke("list_libraries", { serverUrl: this.serverUrl, token: this.token });
             this.libraries = data;
-            this.selectedLibraryId = this.libraries[0]?.id ?? "";
+            this.selectedLibraryId = "";
             this.isConnected = true;
             this.connectionMessage = "Connected.";
             if (this.selectedLibraryId) {

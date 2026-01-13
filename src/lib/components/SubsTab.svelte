@@ -278,6 +278,13 @@
             if (library) {
               appState.selectLibrary(library);
             }
+          } else {
+            appState.shows = [];
+            appState.selectedShow = null;
+            appState.selectedShowKey = "";
+            appState.seasons = [];
+            appState.selectedSeason = null;
+            appState.selectedSeasonKey = "";
           }
         }}
       >
