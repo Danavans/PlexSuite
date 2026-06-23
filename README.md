@@ -1,69 +1,76 @@
 # PlexSuite
 
-PlexSuite is a portable desktop toolbox for Plex TV libraries. It combines three workflows in one dark Tauri app:
+PlexSuite is a portable desktop toolbox for Plex TV libraries. It brings together a few practical Plex maintenance tools in one small app, with a dark interface and no installer required.
 
-- Trash Selector: preview and selectively purge trashed or missing media parts.
-- Sub Uploader: bulk upload subtitles with automatic episode matching.
-- Plexmatch Generator: create `.plexmatch` files from TMDb episode data and local video files.
+## What It Does
 
-## Status
+PlexSuite includes three tools:
 
-Private project in early development. The app is usable for local workflows, but destructive actions should always be checked with preview/dry-run steps first.
+- Trash Selector: preview and selectively purge trashed or missing media from a Plex TV library.
+- Sub Uploader: match subtitle files to episodes and upload them to Plex in bulk.
+- Plexmatch Generator: use TMDb episode data and local video files to create a `.plexmatch` file.
 
 ## Platforms
 
-- Windows: primary target, portable executable.
-- Linux: supported target, portable executable.
-- Installers are intentionally not part of the default build flow.
+- Windows: tested and currently published.
+- Linux: expected to be possible with Tauri, but not tested for this release.
+
+The app is portable. Download the Windows executable, keep it wherever you want, and run it directly. No installer is required.
+
+## First Setup
+
+Open PlexSuite, go to Settings, and enter:
+
+- Plex URL: the address of your Plex server, for example `http://192.168.1.10:32400`.
+- Plex token: required so PlexSuite can talk to your Plex server.
+- TMDb API key: optional, only needed for Plexmatch Generator.
+
+When the connection works, the app shows a connected status.
 
 ## Local Data
 
-PlexSuite stores local settings next to the executable in `settings.json`. This file can contain a Plex token and a TMDb API key, so it is ignored by Git and must not be committed.
+PlexSuite saves its settings next to the executable in a `settings.json` file. This can include your Plex token and TMDb API key, so keep that file private.
 
-## Requirements
+To reset the app, close PlexSuite and delete `settings.json`.
 
-- Node.js LTS
-- Rust toolchain
-- Windows: Visual Studio Build Tools with MSVC
-- Linux: Tauri system dependencies, including GTK/WebKit packages
+## How To Use
 
-## Development
+### Trash Selector
 
-Install dependencies:
+Use this when Plex has trashed or missing media entries and you want to clean them carefully.
 
-```powershell
-npm install
-```
+1. Select a TV library.
+2. Select a show and, if needed, a season.
+3. Run a dry-run preview first.
+4. Review the list.
+5. Purge only when the preview matches what you expect.
 
-Run the app in development:
+### Sub Uploader
 
-```powershell
-npm run tauri dev
-```
+Use this when you have subtitle files in a folder and want to send them to Plex.
 
-Run checks:
+1. Select the matching Plex library, show, and season.
+2. Choose the subtitle folder.
+3. Preview the automatic matching.
+4. Adjust the mapping if needed.
+5. Upload the matched subtitles.
 
-```powershell
-npm run check
-```
+### Plexmatch Generator
 
-Build a portable release:
+Use this to create a `.plexmatch` file from TMDb episode data and your local video files.
 
-```powershell
-npm run tauri build
-```
+1. Add a TMDb API key in Settings.
+2. Search for the show.
+3. Select the episodes and video files.
+4. Check or adjust the mapping.
+5. Save the `.plexmatch` file.
 
-Build outputs are generated under `src-tauri/target/` and are ignored by Git.
+## Safety Notes
 
-## Usage
-
-1. Open Settings.
-2. Enter the Plex server URL and Plex token.
-3. Add a TMDb API key if you want to use Plexmatch Generator.
-4. Use the relevant tab:
-   - Trash Selector for dry-run previews and scoped trash purges.
-   - Sub Uploader for subtitle folder matching and upload.
-   - Plexmatch Generator for TMDb lookup, file mapping, and `.plexmatch` export.
+- Always use previews before deleting or uploading.
+- PlexSuite is focused on TV libraries.
+- The Windows version is the only tested release target for now.
+- Linux may work, but it is not part of the published release yet.
 
 ## Tech Stack
 
