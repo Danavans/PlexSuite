@@ -1,111 +1,78 @@
 # PlexSuite
 
-Portable desktop toolbox for Plex TV libraries. PlexSuite bundles three workflows in one app:
-- Trash Selector: safe, selective trash purge for a show or season.
-- Sub Uploader: bulk subtitle upload with automatic episode matching.
-- Plexmatch Generator: build a .plexmatch file from TMDb episodes and local files.
+PlexSuite is a portable desktop toolbox for Plex TV libraries. It combines three workflows in one dark Tauri app:
 
-## Why PlexSuite
-- Dark, focused UI tuned for Plex workflows.
-- Preview before destructive actions.
-- Focused on TV libraries (shows, seasons, episodes).
-- Portable settings stored next to the executable (`settings.json`).
-- Built-in activity log in Settings.
-- Windows and Linux builds (separate executables).
+- Trash Selector: preview and selectively purge trashed or missing media parts.
+- Sub Uploader: bulk upload subtitles with automatic episode matching.
+- Plexmatch Generator: create `.plexmatch` files from TMDb episode data and local video files.
 
-## Quick start (prebuilt)
-1. Download the latest release for your OS.
-2. Run the executable (no installer).
-3. Open Settings and enter your Plex URL and Plex token.
-4. Optional: add a TMDb API key to enable Plexmatch Generator.
+## Status
 
-## Build from source
-Requirements:
-- Node.js (LTS)
+Private project in early development. The app is usable for local workflows, but destructive actions should always be checked with preview/dry-run steps first.
+
+## Platforms
+
+- Windows: primary target, portable executable.
+- Linux: supported target, portable executable.
+- Installers are intentionally not part of the default build flow.
+
+## Local Data
+
+PlexSuite stores local settings next to the executable in `settings.json`. This file can contain a Plex token and a TMDb API key, so it is ignored by Git and must not be committed.
+
+## Requirements
+
+- Node.js LTS
 - Rust toolchain
-- Windows: Visual Studio Build Tools (MSVC)
-- Linux: Tauri system dependencies (GTK/WebKit)
+- Windows: Visual Studio Build Tools with MSVC
+- Linux: Tauri system dependencies, including GTK/WebKit packages
 
-Install and run:
+## Development
+
+Install dependencies:
+
 ```powershell
 npm install
+```
+
+Run the app in development:
+
+```powershell
 npm run tauri dev
 ```
 
+Run checks:
+
+```powershell
+npm run check
+```
+
 Build a portable release:
+
 ```powershell
 npm run tauri build
 ```
 
-Output:
-- Windows: `src-tauri/target/release/PlexSuite.exe`
-- Linux: `src-tauri/target/release/PlexSuite`
+Build outputs are generated under `src-tauri/target/` and are ignored by Git.
 
-## Getting a Plex token
-1. Open Plex Web in a browser and sign in.
-2. Open DevTools -> Network.
-3. Filter for `X-Plex-Token` or find a request URL that includes `X-Plex-Token=...`.
-4. Copy the token into Settings.
+## Usage
 
-## Usage tutorials
+1. Open Settings.
+2. Enter the Plex server URL and Plex token.
+3. Add a TMDb API key if you want to use Plexmatch Generator.
+4. Use the relevant tab:
+   - Trash Selector for dry-run previews and scoped trash purges.
+   - Sub Uploader for subtitle folder matching and upload.
+   - Plexmatch Generator for TMDb lookup, file mapping, and `.plexmatch` export.
 
-### Trash Selector (selective purge)
-1. In Settings, save your Plex URL and token until you see "Connected".
-2. In Trash Selector, choose a TV library, show, and optional season.
-3. Click "Dry Run" to preview what will be removed.
-4. Click "Purge Trash" to delete the trashed or missing parts for that scope.
+## Tech Stack
 
-Tips:
-- Use Dry Run before every purge.
-- The preview counts missing parts, not just full episodes.
-
-### Sub Uploader (bulk subtitles)
-1. Choose the TV library, show, and optional season.
-2. Click "Choose folder" and select your subtitle folder.
-3. Click "Preview Mapping" to see matches.
-4. Click "Upload Subtitles" to send matched files to Plex.
-
-Matching notes:
-- Uses common patterns like `S01E02`, `1x02`, and similar.
-- The status dot turns green when a subtitle is matched.
-
-### Plexmatch Generator (TMDb to .plexmatch)
-1. Add your TMDb API key in Settings.
-2. Search for the series, then select it to load episodes.
-3. Select episodes and add video files, then click "Map selected".
-4. Drag to reorder file rows or mappings if needed.
-5. Adjust "Path depth" to control how much parent path is written.
-6. Click "Save .plexmatch" and choose a location.
-
-## FAQ
-
-### PlexSuite shows "Disconnected" after I enter my Plex URL and token
-Make sure the URL includes the protocol (for example `http://192.168.1.10:32400`) and that the token is valid. Check that Plex Web works with the same URL on this machine.
-
-### Where are settings stored and how do I reset them?
-Settings are stored next to the executable in `settings.json`. Delete that file to reset PlexSuite.
-
-### Subtitles are not matching any episodes
-Confirm the subtitle files include episode identifiers like `S01E02` or `1x02`. Use Preview Mapping to verify matches before upload.
-
-### Upload succeeds but I do not see subtitles in Plex
-Plex may need a refresh. Try refreshing metadata for the show or the affected season in Plex Web.
-
-### The .plexmatch file includes too much path
-Lower the "Path depth" value. Use `0` to use the parent folder, `-1` for the file name only, or increase it to include more parent folders.
-
-### Where can I find logs?
-Open Settings and use the Logs panel to review recent actions with timestamps.
-
-## Data and portability
-- Settings live next to the executable in `settings.json`.
-- Delete `settings.json` to reset the app.
-- No installers; the executable is self-contained.
-
-## Tech stack
-- Tauri (Rust backend)
-- SvelteKit + Vite (frontend)
+- Tauri 2
+- Rust
+- SvelteKit
+- Svelte 5
+- Vite
 
 ## License
-MIT
 
+MIT
