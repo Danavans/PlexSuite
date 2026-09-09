@@ -1053,25 +1053,12 @@ button:hover:not(:disabled) {
   }
   .sub-selector-list { max-height: 480px; }
 }
-.sub-cleanup-state {
-  position: relative;
-  min-width: 0;
-}
-.sub-cleanup-placeholder {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-}
 .sub-cleanup-categories {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   min-width: 0;
   max-width: 540px;
-}
-.sub-cleanup-categories-pending {
-  visibility: hidden;
-  pointer-events: none;
 }
 .sub-cleanup-category {
   display: grid;
@@ -1081,6 +1068,5 @@ button:hover:not(:disabled) {
 }
 .sub-cleanup-category > span { min-width: 0; overflow-wrap: anywhere; }
 .sub-cleanup-category input { width: auto; accent-color: var(--accent); }
-.sub-cleanup-category small { display: block; }
 .sub-cleanup-embedded { grid-template-columns: 1fr auto; padding-left: 28px; }
 .sub-cleanup-warning { color: #efb366; }

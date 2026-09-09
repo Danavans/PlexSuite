@@ -100,20 +100,19 @@
     </div>
     <div class="panel lift-2">
       <h2>Subtitle Cleanup</h2>
-      <div class="sub-cleanup-state">
-        {#if !valid}<p class="kicker sub-cleanup-placeholder">Scan subtitles to review cleanup categories.</p>{/if}
-        <div class:sub-cleanup-categories-pending={!valid} class="sub-cleanup-categories" aria-hidden={!valid}>
+      {#if valid}
+        <div class="sub-cleanup-categories">
           {#each cleanupOptions as category}
             <label class="sub-cleanup-category">
               <input type="checkbox" bind:group={cleanupCategories} value={category} disabled={!valid || appState.isBusy || !scan?.counts[category]} />
-              <span>{category}{#if category === "Unknown External"}<small class="sub-cleanup-warning">Less safe · may include files on disk</small>{/if}</span>
+              <span>{category}</span>
               <strong>{scan?.counts[category] || 0}</strong>
             </label>
           {/each}
-          <div class="sub-cleanup-category sub-cleanup-embedded"><span>Embedded <small class="kicker">Always preserved</small></span><strong>{scan?.counts.Embedded || 0}</strong></div>
+          <div class="sub-cleanup-category sub-cleanup-embedded"><span>Embedded</span><strong>{scan?.counts.Embedded || 0}</strong></div>
         </div>
-      </div>
-      <p class="kicker">Remove external subtitles in the selected scope. Sidecar and unknown external subtitles may be files on disk. Embedded tracks are never removed.</p>
+      {/if}
+      <p class="kicker">Remove external subtitles in the selected scope.</p>
       <div class="actions"><button data-variant="primary" onclick={() => confirmOpen = true} disabled={!valid || !cleanupKeys.length || appState.isBusy}>Remove Selected</button></div>
     </div>
   </div>
