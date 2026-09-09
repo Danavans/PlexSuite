@@ -55,7 +55,7 @@
 - Confirmation purge + modal de fin de purge en theme app.
 
 ## Architecture (Refactoring Janvier 2026)
-- Modularité: Application découpée en composants Svelte (`TrashTab`, `SubsTab`, `PlexmatchTab`, `SettingsTab`).
+- Modularité: Application découpée en composants Svelte (`TrashTab`, `SubsTab`, `SubSelectorTab`, `PlexmatchTab`, `SettingsTab`).
 - État Centralisé: `appState.svelte.js` gère la logique métier et les données partagées via Svelte 5 Runes.
 - Syntaxe: Migration complète vers Svelte 5 (`onclick`, `$state`).
 

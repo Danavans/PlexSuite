@@ -9,7 +9,7 @@
   const tabDescription = $derived(
     appState.activeTab === "trash"
       ? "Purge Plex trash selectively for a show or season with a safe dry run."
-      : appState.activeTab === "subselector" ? "Select exact subtitle variants and remove Plex-uploaded subtitles." : appState.activeTab === "subs"
+      : appState.activeTab === "subselector" ? "Scan subtitle variants, set defaults, and remove external subtitles." : appState.activeTab === "subs"
         ? "Bulk upload subtitles by auto-matching episodes from filenames."
         : appState.activeTab === "plexmatch"
           ? "Map TMDb episodes to local files and export a PlexMatch file."
