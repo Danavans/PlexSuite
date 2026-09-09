@@ -79,55 +79,59 @@
 </script>
 
 <section class="grid sub-selector-grid">
-  <div class="panel lift-1">
-    <h2>Library &amp; Target</h2>
-    <div class="field"><label for="selector-library">TV Library</label><select id="selector-library" bind:value={appState.selectedLibraryId} onchange={changeLibrary} disabled={!appState.isConnected}>
-      <option value="">Select a library</option>{#each appState.libraries as library}<option value={library.id}>{library.title}</option>{/each}
-    </select></div>
-    <div class="field"><label for="selector-show">Show</label><select id="selector-show" bind:value={appState.selectedShowKey} onchange={changeShow} disabled={!appState.selectedLibraryId}>
-      <option value="">Select a show</option>{#each appState.shows as show}<option value={show.rating_key}>{show.title}</option>{/each}
-    </select></div>
-    <div class="field"><label for="selector-season">Season</label><select id="selector-season" bind:value={appState.selectedSeasonKey} onchange={() => { reset(); appState.selectSeason(appState.seasons.find(s => s.rating_key === appState.selectedSeasonKey) ?? null); }} disabled={!appState.selectedShow}>
-      <option value="">All Seasons</option>{#each appState.seasons as season}<option value={season.rating_key}>{season.title}</option>{/each}
-    </select></div>
+  <div class="sub-selector-stack">
+    <div class="panel lift-1">
+      <h2>Library &amp; Target</h2>
+      <div class="field"><label for="selector-library">TV Library</label><select id="selector-library" bind:value={appState.selectedLibraryId} onchange={changeLibrary} disabled={!appState.isConnected}>
+        <option value="">Select a library</option>{#each appState.libraries as library}<option value={library.id}>{library.title}</option>{/each}
+      </select></div>
+      <div class="field"><label for="selector-show">Show</label><select id="selector-show" bind:value={appState.selectedShowKey} onchange={changeShow} disabled={!appState.selectedLibraryId}>
+        <option value="">Select a show</option>{#each appState.shows as show}<option value={show.rating_key}>{show.title}</option>{/each}
+      </select></div>
+      <div class="field"><label for="selector-season">Season</label><select id="selector-season" bind:value={appState.selectedSeasonKey} onchange={() => { reset(); appState.selectSeason(appState.seasons.find(s => s.rating_key === appState.selectedSeasonKey) ?? null); }} disabled={!appState.selectedShow}>
+        <option value="">All Seasons</option>{#each appState.seasons as season}<option value={season.rating_key}>{season.title}</option>{/each}
+      </select></div>
+    </div>
+    <div class="panel lift-2">
+      <h2>Subtitle Scan</h2>
+      <p class="kicker">Scan the selected show or season to compare subtitle variants and review external subtitles.</p>
+      <div class="actions"><button data-variant="primary" onclick={() => run("scan")} disabled={appState.isBusy || !appState.isConnected || !appState.selectedShowKey}>Scan Subtitles</button></div>
+      {#if summary}<p class="status info" role="status">{summary}</p>{/if}
+      {#if details.length}<details><summary>Action details ({details.length})</summary><div class="debug">{#each details as line}<p>{line}</p>{/each}</div></details>{/if}
+      {#if valid && scan!.errors.length}<details><summary>Scan errors ({scan!.errors.length})</summary><div class="debug">{#each scan!.errors as error}<p>{error}</p>{/each}</div></details>{/if}
+    </div>
+    <div class="panel lift-3">
+      <h2>Subtitle Cleanup</h2>
+      {#if valid}
+        <div class="sub-cleanup-categories">
+          {#each cleanupOptions as category}
+            <label class="sub-cleanup-category">
+              <input type="checkbox" bind:group={cleanupCategories} value={category} disabled={appState.isBusy || !scan!.counts[category]} />
+              <span>{category}{#if category === "Unknown External"}<small class="sub-cleanup-warning">Less safe · may include files on disk</small>{/if}</span>
+              <strong>{scan!.counts[category] || 0}</strong>
+            </label>
+          {/each}
+          <div class="sub-cleanup-category sub-cleanup-embedded"><span>Embedded <small class="kicker">Always preserved</small></span><strong>{scan!.counts.Embedded || 0}</strong></div>
+        </div>
+      {:else}<p class="kicker">Scan subtitles to review cleanup categories.</p>{/if}
+      <p class="kicker">Remove external subtitles in the selected scope. Sidecar and unknown external subtitles may be files on disk. Embedded tracks are never removed.</p>
+      <div class="actions"><button data-variant="primary" onclick={() => confirmOpen = true} disabled={!valid || !cleanupKeys.length || appState.isBusy}>Remove Selected</button></div>
+    </div>
   </div>
-  <div class="panel lift-2">
-    <h2>Subtitle Scan</h2>
-    <p class="kicker">Scan the selected show or season to compare subtitle variants and review external subtitles.</p>
-    <div class="actions"><button data-variant="primary" onclick={() => run("scan")} disabled={appState.isBusy || !appState.isConnected || !appState.selectedShowKey}>Scan Subtitles</button></div>
-    {#if summary}<p class="status info" role="status">{summary}</p>{/if}
-    {#if details.length}<details><summary>Action details ({details.length})</summary><div class="debug">{#each details as line}<p>{line}</p>{/each}</div></details>{/if}
-    {#if valid && scan!.errors.length}<details><summary>Scan errors ({scan!.errors.length})</summary><div class="debug">{#each scan!.errors as error}<p>{error}</p>{/each}</div></details>{/if}
-  </div>
-  <div class="panel sub-selector-wide lift-3">
-    <h2>Available Subtitles</h2>
-    {#if !valid}<p class="kicker">Scan subtitles to see available variants.</p>
-    {:else if !groups.length}<p class="kicker">No subtitle tracks found in the scanned episodes.</p>
-    {:else}<div class="list sub-selector-list">{#each groups as group}<details class="sub-selector-language"><summary>{group.name}</summary>
-      {#each group.variants as variant}<div class="sub-selector-variant">
-        <label class="list-item"><input type="radio" name="subtitle-variant" bind:group={selected} value={JSON.stringify(variant.key)} disabled={appState.isBusy} /><span>{label(variant)}<br /><small class="kicker">{variant.episodeCount} / {variant.totalEpisodes} episodes · Currently selected: {variant.selectedCount}<br />{variant.key.languageTag}</small></span></label>
-        {#if variant.missing.length}<details class="kicker"><summary>Missing ({variant.missing.length})</summary><p>{variant.missing.join(", ")}</p></details>{/if}
-      </div>{/each}
-    </details>{/each}</div>{/if}
-    <p class="kicker">Selects matching tracks for the current Plex user. Episodes without this variant remain unchanged. Each media version and part is matched independently.</p>
-    <div class="actions"><button data-variant="primary" onclick={() => run("apply")} disabled={!valid || !selected || appState.isBusy}>Set as Default</button></div>
-  </div>
-  <div class="panel sub-selector-wide lift-3">
-    <h2>Subtitle Cleanup</h2>
-    {#if valid}
-      <div class="sub-cleanup-categories">
-        {#each cleanupOptions as category}
-          <label class="sub-cleanup-category">
-            <input type="checkbox" bind:group={cleanupCategories} value={category} disabled={appState.isBusy || !scan!.counts[category]} />
-            <span>{category}{#if category === "Unknown External"}<small class="sub-cleanup-warning">Less safe · may include files on disk</small>{/if}</span>
-            <strong>{scan!.counts[category] || 0}</strong>
-          </label>
-        {/each}
-        <div class="sub-cleanup-category sub-cleanup-embedded"><span>Embedded <small class="kicker">Always preserved</small></span><strong>{scan!.counts.Embedded || 0}</strong></div>
-      </div>
-    {:else}<p class="kicker">Scan subtitles to review cleanup categories.</p>{/if}
-    <p class="kicker">Remove external subtitles in the selected scope. Sidecar and unknown external subtitles may be files on disk. Embedded tracks are never removed.</p>
-    <div class="actions"><button data-variant="primary" onclick={() => confirmOpen = true} disabled={!valid || !cleanupKeys.length || appState.isBusy}>Remove Selected</button></div>
+  <div class="sub-selector-results-shell">
+    <div class="panel sub-selector-results lift-2">
+      <h2>Available Subtitles</h2>
+      {#if !valid}<p class="kicker">Scan subtitles to see available variants.</p>
+      {:else if !groups.length}<p class="kicker">No subtitle tracks found in the scanned episodes.</p>
+      {:else}<div class="list sub-selector-list">{#each groups as group}<details class="sub-selector-language"><summary>{group.name}</summary>
+        {#each group.variants as variant}<div class="sub-selector-variant">
+          <label class="list-item"><input type="radio" name="subtitle-variant" bind:group={selected} value={JSON.stringify(variant.key)} disabled={appState.isBusy} /><span>{label(variant)}<br /><small class="kicker">{variant.episodeCount} / {variant.totalEpisodes} episodes · Currently selected: {variant.selectedCount}<br />{variant.key.languageTag}</small></span></label>
+          {#if variant.missing.length}<details class="kicker"><summary>Missing ({variant.missing.length})</summary><p>{variant.missing.join(", ")}</p></details>{/if}
+        </div>{/each}
+      </details>{/each}</div>{/if}
+      <p class="kicker">Selects matching tracks for the current Plex user. Episodes without this variant remain unchanged. Each media version and part is matched independently.</p>
+      <div class="actions"><button data-variant="primary" onclick={() => run("apply")} disabled={!valid || !selected || appState.isBusy}>Set as Default</button></div>
+    </div>
   </div>
 </section>
 {#if confirmOpen && valid}
