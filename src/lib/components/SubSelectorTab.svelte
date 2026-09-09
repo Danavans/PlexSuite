@@ -91,16 +91,12 @@
       <div class="field"><label for="selector-season">Season</label><select id="selector-season" bind:value={appState.selectedSeasonKey} onchange={() => { reset(); appState.selectSeason(appState.seasons.find(s => s.rating_key === appState.selectedSeasonKey) ?? null); }} disabled={!appState.selectedShow}>
         <option value="">All Seasons</option>{#each appState.seasons as season}<option value={season.rating_key}>{season.title}</option>{/each}
       </select></div>
-    </div>
-    <div class="panel lift-2">
-      <h2>Subtitle Scan</h2>
-      <p class="kicker">Scan the selected show or season to compare subtitle variants and review external subtitles.</p>
-      <div class="actions"><button data-variant="primary" onclick={() => run("scan")} disabled={appState.isBusy || !appState.isConnected || !appState.selectedShowKey}>Scan Subtitles</button></div>
       {#if summary}<p class="status info" role="status">{summary}</p>{/if}
       {#if details.length}<details><summary>Action details ({details.length})</summary><div class="debug">{#each details as line}<p>{line}</p>{/each}</div></details>{/if}
       {#if valid && scan!.errors.length}<details><summary>Scan errors ({scan!.errors.length})</summary><div class="debug">{#each scan!.errors as error}<p>{error}</p>{/each}</div></details>{/if}
+      <div class="actions"><button data-variant="primary" onclick={() => run("scan")} disabled={appState.isBusy || !appState.isConnected || !appState.selectedShowKey}>Scan Subtitles</button></div>
     </div>
-    <div class="panel lift-3">
+    <div class="panel lift-2">
       <h2>Subtitle Cleanup</h2>
       {#if valid}
         <div class="sub-cleanup-categories">

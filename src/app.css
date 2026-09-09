@@ -982,6 +982,7 @@ button:hover:not(:disabled) {
 
 .sub-selector-grid {
   grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  column-gap: 22px;
   align-items: stretch;
 }
 .sub-selector-stack {
