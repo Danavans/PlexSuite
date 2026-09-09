@@ -1019,6 +1019,21 @@ button:hover:not(:disabled) {
   inset: 0;
   overflow: hidden;
 }
+.sub-selector-scan-row {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+.sub-selector-scan-row button { flex: none; }
+.sub-selector-scan-summary {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .sub-selector-list { max-height: none; }
 .sub-selector-language > summary { padding: 10px 0; cursor: pointer; font-weight: 600; }
 .sub-selector-variant { margin: 6px 0 10px 16px; }
@@ -1030,7 +1045,22 @@ button:hover:not(:disabled) {
 @media (max-width: 960px) {
   .sub-selector-grid { grid-template-columns: 1fr; }
   .sub-selector-results { position: static; overflow: visible; }
+  .sub-selector-scan-row { flex-wrap: wrap; }
+  .sub-selector-scan-summary {
+    flex-basis: 220px;
+    overflow: visible;
+    white-space: normal;
+  }
   .sub-selector-list { max-height: 480px; }
+}
+.sub-cleanup-state {
+  position: relative;
+  min-width: 0;
+}
+.sub-cleanup-placeholder {
+  position: absolute;
+  inset: 0;
+  margin: 0;
 }
 .sub-cleanup-categories {
   display: grid;
@@ -1038,6 +1068,10 @@ button:hover:not(:disabled) {
   width: 100%;
   min-width: 0;
   max-width: 540px;
+}
+.sub-cleanup-categories-pending {
+  visibility: hidden;
+  pointer-events: none;
 }
 .sub-cleanup-category {
   display: grid;

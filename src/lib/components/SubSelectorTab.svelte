@@ -91,25 +91,28 @@
       <div class="field"><label for="selector-season">Season</label><select id="selector-season" bind:value={appState.selectedSeasonKey} onchange={() => { reset(); appState.selectSeason(appState.seasons.find(s => s.rating_key === appState.selectedSeasonKey) ?? null); }} disabled={!appState.selectedShow}>
         <option value="">All Seasons</option>{#each appState.seasons as season}<option value={season.rating_key}>{season.title}</option>{/each}
       </select></div>
-      {#if summary}<p class="status info" role="status">{summary}</p>{/if}
       {#if details.length}<details><summary>Action details ({details.length})</summary><div class="debug">{#each details as line}<p>{line}</p>{/each}</div></details>{/if}
       {#if valid && scan!.errors.length}<details><summary>Scan errors ({scan!.errors.length})</summary><div class="debug">{#each scan!.errors as error}<p>{error}</p>{/each}</div></details>{/if}
-      <div class="actions"><button data-variant="primary" onclick={() => run("scan")} disabled={appState.isBusy || !appState.isConnected || !appState.selectedShowKey}>Scan Subtitles</button></div>
+      <div class="actions sub-selector-scan-row">
+        <button data-variant="primary" onclick={() => run("scan")} disabled={appState.isBusy || !appState.isConnected || !appState.selectedShowKey}>Scan Subtitles</button>
+        {#if summary}<p class="sub-selector-scan-summary" role="status" title={summary}>{summary}</p>{/if}
+      </div>
     </div>
     <div class="panel lift-2">
       <h2>Subtitle Cleanup</h2>
-      {#if valid}
-        <div class="sub-cleanup-categories">
+      <div class="sub-cleanup-state">
+        {#if !valid}<p class="kicker sub-cleanup-placeholder">Scan subtitles to review cleanup categories.</p>{/if}
+        <div class:sub-cleanup-categories-pending={!valid} class="sub-cleanup-categories" aria-hidden={!valid}>
           {#each cleanupOptions as category}
             <label class="sub-cleanup-category">
-              <input type="checkbox" bind:group={cleanupCategories} value={category} disabled={appState.isBusy || !scan!.counts[category]} />
+              <input type="checkbox" bind:group={cleanupCategories} value={category} disabled={!valid || appState.isBusy || !scan?.counts[category]} />
               <span>{category}{#if category === "Unknown External"}<small class="sub-cleanup-warning">Less safe · may include files on disk</small>{/if}</span>
-              <strong>{scan!.counts[category] || 0}</strong>
+              <strong>{scan?.counts[category] || 0}</strong>
             </label>
           {/each}
-          <div class="sub-cleanup-category sub-cleanup-embedded"><span>Embedded <small class="kicker">Always preserved</small></span><strong>{scan!.counts.Embedded || 0}</strong></div>
+          <div class="sub-cleanup-category sub-cleanup-embedded"><span>Embedded <small class="kicker">Always preserved</small></span><strong>{scan?.counts.Embedded || 0}</strong></div>
         </div>
-      {:else}<p class="kicker">Scan subtitles to review cleanup categories.</p>{/if}
+      </div>
       <p class="kicker">Remove external subtitles in the selected scope. Sidecar and unknown external subtitles may be files on disk. Embedded tracks are never removed.</p>
       <div class="actions"><button data-variant="primary" onclick={() => confirmOpen = true} disabled={!valid || !cleanupKeys.length || appState.isBusy}>Remove Selected</button></div>
     </div>
