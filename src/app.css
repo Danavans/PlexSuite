@@ -218,17 +218,6 @@ textarea {
   white-space: nowrap;
 }
 
-.version-line a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.version-line a:hover,
-.version-line a:focus-visible {
-  color: var(--accent-strong);
-  text-decoration: underline;
-}
-
 .status-dot {
   width: 12px;
   height: 12px;
@@ -1003,16 +992,6 @@ button:hover:not(:disabled) {
 
   .panel {
     box-shadow: none;
-  }
-}
-
-@media (max-width: 520px) {
-  .hero-top {
-    flex-wrap: wrap;
-  }
-
-  .status-row {
-    width: 100%;
   }
 }
 

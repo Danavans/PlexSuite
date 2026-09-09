@@ -46,7 +46,7 @@
             </span>
           </div>
           {#if appVersion}
-            <p class="version-line">v{appVersion} · by Danavans · <a href="https://github.com/Danavans/PlexSuite" target="_blank" rel="noreferrer">GitHub ↗</a></p>
+            <p class="version-line">v{appVersion}</p>
           {/if}
         </div>
       </div>
