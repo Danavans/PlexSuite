@@ -1,10 +1,18 @@
 <script>
+  import { getVersion } from "@tauri-apps/api/app";
+  import { onMount } from "svelte";
   import { appState } from "../lib/appState.svelte.js";
   import TrashTab from "../lib/components/TrashTab.svelte";
   import SubSelectorTab from "../lib/components/SubSelectorTab.svelte";
   import SubsTab from "../lib/components/SubsTab.svelte";
   import PlexmatchTab from "../lib/components/PlexmatchTab.svelte";
   import SettingsTab from "../lib/components/SettingsTab.svelte";
+
+  let appVersion = $state("");
+
+  onMount(() => {
+    getVersion().then((version) => (appVersion = version)).catch(() => {});
+  });
 
   const tabDescription = $derived(
     appState.activeTab === "trash"
@@ -30,11 +38,16 @@
         <h1 class="sr-only">PlexSuite</h1>
       </div>
       <div class="status-row">
-        <div class="status-pill">
-          <span class={`status-dot ${appState.isConnected ? "ok" : "down"}`}></span>
-          <span class="status-text">
-            {appState.isConnected ? "Connected" : "Disconnected"}
-          </span>
+        <div class="status-identity">
+          <div class="status-pill">
+            <span class={`status-dot ${appState.isConnected ? "ok" : "down"}`}></span>
+            <span class="status-text">
+              {appState.isConnected ? "Connected" : "Disconnected"}
+            </span>
+          </div>
+          {#if appVersion}
+            <p class="version-line">v{appVersion} · by Danavans · <a href="https://github.com/Danavans/PlexSuite" target="_blank" rel="noreferrer">GitHub ↗</a></p>
+          {/if}
         </div>
       </div>
     </div>
