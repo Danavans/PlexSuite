@@ -1084,4 +1084,5 @@ button:hover:not(:disabled) {
 .sub-cleanup-category > span { min-width: 0; overflow-wrap: anywhere; }
 .sub-cleanup-category input { width: auto; accent-color: var(--accent); }
 .sub-cleanup-embedded input { opacity: 0.45; }
+.sub-cleanup-categories + .actions { margin-top: 14px; }
 .sub-cleanup-warning { color: #efb366; }
