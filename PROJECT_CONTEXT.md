@@ -23,6 +23,13 @@
 - Sub Uploader: Library & Target + Subtitle Source cote a cote (50/50). Preview en dessous pleine largeur. Choix dossier via bouton (pas de drag/drop).
 - Plexmatch Generator: TMDb lookup en haut, episodes + video files cote a cote, mapping dessous, preferences en bas, preview a droite.
 
+## Sub Selector cleanup (September 2026)
+- Scan and Set as Default continue to use JSON and exact language/Forced/SDH variants.
+- Cleanup has unchecked-by-default Physical Sidecar, Plex Uploaded and Unknown External categories; Embedded has no checkbox and is never deletable.
+- Confirmation includes category-specific disk deletion warnings. Removal uses Plex DELETE only and revalidates current scope, identity and selected category before each stream deletion.
+- Root cause confirmed with a read-only JSON/XML comparison: Plex omits external stream index; python-plexapi defaults it to -1. PlexSuite now handles the absent attribute equivalently while retaining malformed values as uncertain.
+- Development diagnostic: `scripts/diagnose-subtitle-metadata.ps1` (PowerShell 7, GET only, token-free classification fields).
+
 ## Sub Uploader (etat actuel)
 - Choix dossier via bouton (pas de drag/drop).
 - Champ Episode optionnel supprime.

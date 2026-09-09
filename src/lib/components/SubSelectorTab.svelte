@@ -11,9 +11,17 @@
   let summary = $state("");
   let details = $state<string[]>([]);
   let scannedScope = $state("");
+  const cleanupOptions = ["Physical Sidecar", "Plex Uploaded", "Unknown External"];
+  const cleanupWarnings: Record<string, string> = {
+    "Plex Uploaded": "These subtitles were uploaded into Plex and will be removed.",
+    "Physical Sidecar": "These are subtitle files stored next to the video. Removing them may permanently delete the subtitle files from disk.",
+    "Unknown External": "These external subtitles could not be classified reliably. They may include physical subtitle files. Removing them may permanently delete subtitle files."
+  };
+  let cleanupCategories = $state<string[]>([]);
   const scope = $derived(JSON.stringify([appState.serverUrl, appState.token, appState.selectedLibraryId, appState.selectedShowKey, appState.selectedSeasonKey]));
   const valid = $derived(scan !== null && scannedScope === scope);
-  const uploadedKeys = $derived(valid ? [...new Set(scan!.episodes.flatMap(e => e.parts.flatMap(p => p.streams.filter(s => s.source === "Plex Uploaded" && s.key).map(s => s.key!))))] : []);
+  const cleanupKeys = $derived(valid ? [...new Set(scan!.episodes.flatMap(e => e.parts.flatMap(p => p.streams.filter(s => s.source !== "Embedded" && cleanupCategories.includes(s.source) && s.key).map(s => s.key!))))] : []);
+  $effect(() => { scope; cleanupCategories = []; confirmOpen = false; });
   const names = new Intl.DisplayNames(["en"], { type: "language" });
   const regions = new Intl.DisplayNames(["en"], { type: "region" });
   const scripts = new Intl.DisplayNames(["en"], { type: "script" });
@@ -27,7 +35,7 @@
   }
   const groups = $derived(valid ? [...new Set(scan!.variants.map(language))].sort().map(name => ({ name, variants: scan!.variants.filter(v => language(v) === name) })) : []);
   function args() { return { serverUrl: appState.serverUrl, token: appState.token, libraryId: appState.selectedLibraryId, showRatingKey: appState.selectedShowKey, seasonRatingKey: appState.selectedSeasonKey || null }; }
-  function reset() { scan = null; selected = ""; confirmOpen = false; summary = ""; details = []; }
+  function reset() { scan = null; selected = ""; cleanupCategories = []; confirmOpen = false; summary = ""; details = []; }
   function changeLibrary() {
     reset();
     const library = appState.libraries.find(l => l.id === appState.selectedLibraryId);
@@ -47,14 +55,16 @@
     const variant = scan?.variants.find(v => JSON.stringify(v.key) === selected);
     if (action === "apply" && !variant) return;
     const request = args(); const requestScope = scope;
-    const reviewedKeys = [...uploadedKeys];
+    const reviewedKeys = [...cleanupKeys];
+    const categories = [...cleanupCategories];
+    if (action === "remove" && (!categories.length || !reviewedKeys.length)) return;
     confirmOpen = false; appState.isBusy = true;
-    summary = action === "scan" ? "Scanning subtitles..." : action === "apply" ? "Selecting subtitle streams..." : "Removing uploaded subtitles...";
+    summary = action === "scan" ? "Scanning subtitles..." : action === "apply" ? "Selecting subtitle streams..." : "Removing selected external subtitles...";
     appState.setStatus("info", summary); details = [];
     try {
       if (action !== "scan") {
-        const result = await invoke<Result>(action === "apply" ? "set_subtitle_variant" : "remove_uploaded_subtitles", { ...request, variant: variant?.key, reviewedKeys });
-        summary = action === "apply" ? `Applied: ${result.applied} · Missing: ${result.missing.length} · Errors: ${result.errors.length}` : `Removed: ${result.removed} · Errors: ${result.errors.length} · Skipped unsafe: ${result.skippedUnsafe}`;
+        const result = await invoke<Result>(action === "apply" ? "set_subtitle_variant" : "remove_selected_subtitles", { ...request, variant: variant?.key, reviewedKeys, categories });
+        summary = action === "apply" ? `Applied: ${result.applied} · Missing: ${result.missing.length} · Errors: ${result.errors.length}` : `${categories.join(" + ")} · Removed: ${result.removed} · Errors: ${result.errors.length} · Skipped after revalidation: ${result.skippedUnsafe}`;
         details = [...result.missing.map(code => `Missing: ${code}`), ...result.errors];
         appState.setStatus(result.errors.length ? "error" : "success", summary);
       }
@@ -64,7 +74,7 @@
       if (action === "scan") { summary = `${fresh.scanned} episodes scanned · ${fresh.tracks} subtitle tracks found · Errors: ${fresh.errors.length}`; appState.setStatus(fresh.errors.length ? "error" : "success", summary); }
       else if (fresh.errors.length) appState.setStatus("error", `${summary}. Refresh has ${fresh.errors.length} error(s).`);
     } catch (error) { scan = null; summary = `${action === "scan" ? "Scan" : "Action or refresh"} failed: ${error}`; appState.setStatus("error", summary); }
-    finally { appState.isBusy = false; }
+    finally { cleanupCategories = []; appState.isBusy = false; }
   }
 </script>
 
@@ -83,7 +93,7 @@
   </div>
   <div class="panel lift-2">
     <h2>Subtitle Scan</h2>
-    <p class="kicker">Scan the selected show or season to compare subtitle variants and review uploaded subtitles.</p>
+    <p class="kicker">Scan the selected show or season to compare subtitle variants and review external subtitles.</p>
     <div class="actions"><button data-variant="primary" onclick={() => run("scan")} disabled={appState.isBusy || !appState.isConnected || !appState.selectedShowKey}>Scan Subtitles</button></div>
     {#if summary}<p class="status info" role="status">{summary}</p>{/if}
     {#if details.length}<details><summary>Action details ({details.length})</summary><div class="debug">{#each details as line}<p>{line}</p>{/each}</div></details>{/if}
@@ -104,16 +114,28 @@
   </div>
   <div class="panel sub-selector-wide lift-3">
     <h2>Subtitle Cleanup</h2>
-    {#if valid}<div class="chip-group">{#each Object.entries(scan!.counts) as [name, count]}<span class="status info">{name}: {count}</span>{/each}</div>{/if}
-    <p class="kicker">Only subtitles identified as Plex uploads are eligible. Embedded, physical sidecar and unknown external subtitles are preserved.</p>
-    <div class="actions"><button data-variant="primary" onclick={() => confirmOpen = true} disabled={!valid || !uploadedKeys.length || appState.isBusy}>Remove All Uploaded Subtitles</button></div>
+    {#if valid}
+      <div class="sub-cleanup-categories">
+        {#each cleanupOptions as category}
+          <label class="sub-cleanup-category">
+            <input type="checkbox" bind:group={cleanupCategories} value={category} disabled={appState.isBusy || !scan!.counts[category]} />
+            <span>{category}{#if category === "Unknown External"}<small class="sub-cleanup-warning">Less safe · may include files on disk</small>{/if}</span>
+            <strong>{scan!.counts[category] || 0}</strong>
+          </label>
+        {/each}
+        <div class="sub-cleanup-category sub-cleanup-embedded"><span>Embedded <small class="kicker">Always preserved</small></span><strong>{scan!.counts.Embedded || 0}</strong></div>
+      </div>
+    {:else}<p class="kicker">Scan subtitles to review cleanup categories.</p>{/if}
+    <p class="kicker">Remove external subtitles in the selected scope. Sidecar and unknown external subtitles may be files on disk. Embedded tracks are never removed.</p>
+    <div class="actions"><button data-variant="primary" onclick={() => confirmOpen = true} disabled={!valid || !cleanupKeys.length || appState.isBusy}>Remove Selected</button></div>
   </div>
 </section>
 {#if confirmOpen && valid}
   <dialog class="modal sub-selector-dialog" use:showConfirmation oncancel={() => confirmOpen = false} aria-labelledby="subtitle-remove-title">
-    <h3 id="subtitle-remove-title">Remove {uploadedKeys.length} uploaded subtitles?</h3>
-    <p>This will remove subtitles uploaded into Plex from <strong>{appState.selectedShow?.title} — {appState.selectedSeason?.title || "All Seasons"}</strong>.</p>
-    <p>Embedded subtitles and physical sidecar subtitles will not be touched. Uncertain streams will be skipped.</p>
-    <div class="actions"><button data-variant="ghost" onclick={() => confirmOpen = false}>Cancel</button><button data-variant="primary" onclick={() => run("remove")}>Remove {uploadedKeys.length}</button></div>
+    <h3 id="subtitle-remove-title">Remove {cleanupKeys.length} external subtitles?</h3>
+    <p>Scope: <strong>{appState.selectedShow?.title} — {appState.selectedSeason?.title || "All Seasons"}</strong></p>
+    {#each cleanupCategories as category}<p class:sub-cleanup-warning={category === "Unknown External"}><strong>{category} ({scan!.counts[category]}):</strong> {cleanupWarnings[category]}</p>{/each}
+    <p>Embedded tracks are always preserved. Each stream is checked again before removal; streams outside the selected categories or scope are skipped.</p>
+    <div class="actions"><button data-variant="ghost" onclick={() => confirmOpen = false}>Cancel</button><button data-variant="primary" onclick={() => run("remove")}>Remove {cleanupKeys.length}</button></div>
   </dialog>
 {/if}

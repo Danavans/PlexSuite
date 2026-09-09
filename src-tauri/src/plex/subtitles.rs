@@ -71,6 +71,26 @@ pub fn is_plex_uploaded_subtitle(s: &SubtitleStream) -> bool {
     s.stream_type == Some(3) && s.index == Some(-1) && stream_key(s) && s.transient == Some(0)
 }
 
+// Embedded is deliberately not representable in a deletion request.
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+pub enum SubtitleCategory {
+    #[serde(rename = "Physical Sidecar")]
+    PhysicalSidecar,
+    #[serde(rename = "Plex Uploaded")]
+    PlexUploaded,
+    #[serde(rename = "Unknown External")]
+    UnknownExternal,
+}
+impl SubtitleCategory {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::PhysicalSidecar => "Physical Sidecar",
+            Self::PlexUploaded => "Plex Uploaded",
+            Self::UnknownExternal => "Unknown External",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "camelCase")]
 pub struct VariantKey {
@@ -86,7 +106,9 @@ pub fn parse_stream(v: &Value) -> Option<SubtitleStream> {
     let text = |k: &str| scalar(&v[k]);
     let mut s = SubtitleStream {
         id: text("id"),
-        index: integer(&v["index"]),
+        // Plex omits index on external streams; python-plexapi also defaults
+        // an absent attribute to -1. Keep explicit null/malformed values unknown.
+        index: v.get("index").map(integer).unwrap_or(Some(-1)),
         stream_type: Some(3),
         codec: text("codec"),
         format: text("format"),
@@ -111,10 +133,7 @@ pub fn parse_stream(v: &Value) -> Option<SubtitleStream> {
     // An unrecognised transient value must never become a sidecar or upload.
     s.source = if is_plex_uploaded_subtitle(&s) {
         "Plex Uploaded"
-    } else if s.index.map(|i| i >= 0).unwrap_or(false)
-        && s.key.is_none()
-        && v["transient"].is_null()
-    {
+    } else if s.index.map(|i| i >= 0).unwrap_or(false) {
         "Embedded"
     } else if s.index == Some(-1) && stream_key(&s) && v["transient"].is_null() {
         "Physical Sidecar"
@@ -175,17 +194,24 @@ pub struct SubtitleScan {
     pub scanned: usize,
     pub errors: Vec<String>,
 }
-pub fn candidates(episodes: &[SubtitleEpisode]) -> BTreeSet<String> {
+pub fn candidates(
+    episodes: &[SubtitleEpisode],
+    categories: &[SubtitleCategory],
+) -> BTreeSet<String> {
     // Conflicting observations of the same key veto deletion.
     let mut safe = BTreeSet::new();
     let mut unsafe_keys = BTreeSet::new();
-    for s in episodes
+    for (episode, s) in episodes
         .iter()
-        .flat_map(|e| &e.parts)
-        .flat_map(|p| &p.streams)
+        .flat_map(|e| e.parts.iter().flat_map(|p| &p.streams).map(move |s| (e, s)))
     {
         if let Some(key) = &s.key {
-            if is_plex_uploaded_subtitle(s) {
+            if episode.error.is_none()
+                && s.stream_type == Some(3)
+                && s.index == Some(-1)
+                && stream_key(s)
+                && categories.iter().any(|c| c.as_str() == s.source)
+            {
                 safe.insert(key.clone());
             } else {
                 unsafe_keys.insert(key.clone());
@@ -336,6 +362,7 @@ mod tests {
     fn coverage_selected_and_candidates() {
         let mut upload = stream("fr-FR", false, false);
         upload.transient = Some(0);
+        upload.source = "Plex Uploaded".into();
         upload.selected = true;
         let sidecar = stream("fr-CA", false, false);
         let embedded = parse_stream(&json!({"streamType":3,"index":0})).unwrap();
@@ -343,7 +370,10 @@ mod tests {
             episode("S01E01", vec![upload.clone(), upload.clone(), embedded]),
             episode("S01E02", vec![]),
         ];
-        assert_eq!(candidates(&episodes).len(), 1);
+        assert_eq!(
+            candidates(&episodes, &[SubtitleCategory::PlexUploaded]).len(),
+            1
+        );
         let scan = summarize(episodes);
         let v = scan
             .variants
@@ -355,8 +385,16 @@ mod tests {
             (1, 1, 2)
         );
         assert_eq!(v.missing, vec!["S01E02"]);
-        assert!(candidates(&[episode("1", vec![sidecar.clone()])]).is_empty());
-        assert!(candidates(&[episode("1", vec![upload, sidecar])]).is_empty());
+        assert!(candidates(
+            &[episode("1", vec![sidecar.clone()])],
+            &[SubtitleCategory::PlexUploaded]
+        )
+        .is_empty());
+        assert!(candidates(
+            &[episode("1", vec![upload, sidecar])],
+            &[SubtitleCategory::PlexUploaded]
+        )
+        .is_empty());
     }
 
     #[test]
@@ -373,7 +411,11 @@ mod tests {
         assert!(parse_stream(&json!({"streamType":"invalid"})).is_none());
         let unknown = parse_stream(&json!({"streamType":3,"index":-1,"id":12,"key":"/library/streams/12","transient":"unknown"})).unwrap();
         assert_eq!(unknown.source, "Unknown External");
-        assert!(candidates(&[episode("1", vec![unknown])]).is_empty());
+        assert!(candidates(
+            &[episode("1", vec![unknown])],
+            &[SubtitleCategory::PlexUploaded]
+        )
+        .is_empty());
     }
 
     #[test]
@@ -388,5 +430,103 @@ mod tests {
         assert_eq!(scan.errors.len(), 1);
         assert!(scan.variants[0].missing.is_empty());
         assert_eq!(scan.variants[0].total_episodes, 2);
+    }
+
+    #[test]
+    fn omitted_index_matches_real_json_and_xml_attributes() {
+        // Read-only server comparison: both formats omit index. JSON also
+        // returns transient as a string, exactly as the XML attribute does.
+        for id in [json!(893774), json!("893774")] {
+            let mut raw =
+                json!({"streamType":3,"id":id,"key":"/library/streams/893774","transient":"0"});
+            let uploaded = parse_stream(&raw).unwrap();
+            assert_eq!(uploaded.index, Some(-1));
+            assert_eq!(uploaded.source, "Plex Uploaded");
+            raw.as_object_mut().unwrap().remove("transient");
+            assert_eq!(parse_stream(&raw).unwrap().source, "Physical Sidecar");
+            raw["transient"] = json!("unexpected");
+            assert_eq!(parse_stream(&raw).unwrap().source, "Unknown External");
+            for malformed in [json!(null), json!("invalid"), json!(false), json!(-2)] {
+                raw["index"] = malformed;
+                let s = parse_stream(&raw).unwrap();
+                assert!(candidates(
+                    &[episode("1", vec![s])],
+                    &[SubtitleCategory::UnknownExternal]
+                )
+                .is_empty());
+            }
+        }
+    }
+
+    #[test]
+    fn each_external_category_requires_explicit_selection() {
+        let categories = [
+            SubtitleCategory::PhysicalSidecar,
+            SubtitleCategory::PlexUploaded,
+            SubtitleCategory::UnknownExternal,
+        ];
+        let streams: Vec<_> = [json!(null), json!("0"), json!("unknown")].into_iter().enumerate().map(|(n, transient)| {
+            let id = n + 1;
+            parse_stream(&json!({"streamType":3,"id":id,"key":format!("/library/streams/{id}"),"transient":transient})).unwrap()
+        }).collect();
+        // Even contradictory external-looking metadata cannot make index >= 0 deletable.
+        let embedded = parse_stream(
+            &json!({"streamType":3,"id":4,"index":0,"key":"/library/streams/4","transient":0}),
+        )
+        .unwrap();
+        assert_eq!(embedded.source, "Embedded");
+        let mut tracks = streams.clone();
+        tracks.push(embedded);
+        let episodes = [episode("1", tracks)];
+        for mask in 0..8 {
+            let selected: Vec<_> = categories
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| mask & (1 << i) != 0)
+                .map(|(_, c)| *c)
+                .collect();
+            let keys = candidates(&episodes, &selected);
+            for (i, stream) in streams.iter().enumerate() {
+                assert_eq!(
+                    keys.contains(stream.key.as_ref().unwrap()),
+                    mask & (1 << i) != 0
+                );
+            }
+            assert!(!keys.contains("/library/streams/4"));
+        }
+        assert!(serde_json::from_value::<Vec<SubtitleCategory>>(json!(["Embedded"])).is_err());
+        assert!(serde_json::from_value::<Vec<SubtitleCategory>>(json!(["anything"])).is_err());
+    }
+
+    #[test]
+    fn revalidation_vetoes_changed_category_identity_and_conflicts() {
+        let raw = json!({"streamType":3,"id":12,"key":"/library/streams/12","transient":0});
+        let original = parse_stream(&raw).unwrap();
+        let selected = [SubtitleCategory::PlexUploaded];
+        assert_eq!(
+            candidates(&[episode("1", vec![original.clone()])], &selected).len(),
+            1
+        );
+        for (field, value) in [
+            ("transient", json!("unknown")),
+            ("transient", json!(null)),
+            ("id", json!(99)),
+            ("index", json!(0)),
+            ("key", json!("/library/streams/12?token=secret")),
+        ] {
+            let mut changed = raw.clone();
+            changed[field] = value;
+            let fresh = parse_stream(&changed).unwrap();
+            assert!(candidates(&[episode("1", vec![fresh.clone()])], &selected).is_empty());
+            if fresh.key == original.key {
+                assert!(
+                    candidates(&[episode("1", vec![original.clone(), fresh])], &selected)
+                        .is_empty()
+                );
+            }
+        }
+        let mut failed = episode("1", vec![original]);
+        failed.error = Some("Scope mismatch".into());
+        assert!(candidates(&[failed], &selected).is_empty());
     }
 }

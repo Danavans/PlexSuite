@@ -358,7 +358,7 @@ pub fn run() {
             upload_subtitles,
             scan_subtitle_streams,
             set_subtitle_variant,
-            remove_uploaded_subtitles,
+            remove_selected_subtitles,
             save_text_file
         ])
         .run(tauri::generate_context!())
@@ -406,7 +406,7 @@ async fn set_subtitle_variant(
     .await
 }
 #[tauri::command]
-async fn remove_uploaded_subtitles(
+async fn remove_selected_subtitles(
     app: AppHandle,
     server_url: String,
     token: String,
@@ -414,8 +414,9 @@ async fn remove_uploaded_subtitles(
     show_rating_key: String,
     season_rating_key: Option<String>,
     reviewed_keys: Vec<String>,
+    categories: Vec<plex::subtitles::SubtitleCategory>,
 ) -> Result<plex::subtitles::SubtitleActionResult, String> {
-    plex::remove_uploaded_subtitles(
+    plex::remove_selected_subtitles(
         &app,
         &server_url,
         &token,
@@ -423,6 +424,7 @@ async fn remove_uploaded_subtitles(
         &show_rating_key,
         season_rating_key,
         reviewed_keys,
+        categories,
     )
     .await
 }

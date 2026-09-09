@@ -833,7 +833,7 @@ pub async fn set_subtitle_variant(
     Ok(result)
 }
 
-pub async fn remove_uploaded_subtitles(
+pub async fn remove_selected_subtitles(
     app: &AppHandle,
     server_url: &str,
     token: &str,
@@ -841,7 +841,11 @@ pub async fn remove_uploaded_subtitles(
     show_rating_key: &str,
     season_rating_key: Option<String>,
     reviewed_keys: Vec<String>,
+    categories: Vec<SubtitleCategory>,
 ) -> Result<SubtitleActionResult, String> {
+    if categories.is_empty() {
+        return Ok(SubtitleActionResult::default());
+    }
     // Only keys shown in the confirmed preview are eligible. All metadata comes from Plex again.
     let scan = scan_subtitle_streams(
         app,
@@ -852,7 +856,7 @@ pub async fn remove_uploaded_subtitles(
         season_rating_key.clone(),
     )
     .await?;
-    let safe = candidates(&scan.episodes);
+    let safe = candidates(&scan.episodes, &categories);
     let reviewed: std::collections::BTreeSet<_> = reviewed_keys.into_iter().collect();
     let mut result = SubtitleActionResult {
         errors: scan.errors.clone(),
@@ -893,7 +897,7 @@ pub async fn remove_uploaded_subtitles(
                         parts,
                         ..owner.clone()
                     };
-                    if !candidates(&[fresh]).contains(&key) {
+                    if !candidates(&[fresh], &categories).contains(&key) {
                         result.skipped_unsafe += 1;
                         continue;
                     }

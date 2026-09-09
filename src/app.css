@@ -991,3 +991,18 @@ button:hover:not(:disabled) {
 .sub-selector-dialog { color: var(--ink); }
 .sub-selector-dialog::backdrop { background: rgba(10, 10, 12, 0.55); backdrop-filter: blur(2px); }
 @media (max-width: 960px) { .sub-selector-grid { grid-template-columns: 1fr; } }
+.sub-cleanup-categories {
+  display: grid;
+  gap: 10px;
+  max-width: 540px;
+}
+.sub-cleanup-category {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.sub-cleanup-category input { width: auto; accent-color: var(--accent); }
+.sub-cleanup-category small { display: block; }
+.sub-cleanup-embedded { grid-template-columns: 1fr auto; padding-left: 28px; }
+.sub-cleanup-warning { color: #efb366; }
