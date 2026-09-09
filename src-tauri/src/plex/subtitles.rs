@@ -193,6 +193,7 @@ pub struct SubtitleScan {
     pub tracks: usize,
     pub scanned: usize,
     pub errors: Vec<String>,
+    pub diagnostics: Vec<String>,
 }
 pub fn candidates(
     episodes: &[SubtitleEpisode],
@@ -285,6 +286,7 @@ pub fn summarize(episodes: Vec<SubtitleEpisode>) -> SubtitleScan {
         counts,
         tracks,
         errors,
+        diagnostics: Vec::new(),
     }
 }
 

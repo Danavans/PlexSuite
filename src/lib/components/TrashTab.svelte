@@ -3,7 +3,7 @@
   import { appState } from "../appState.svelte.js";
 
   /**
-   * @typedef {{ count: number, titles: string[] }} TrashPreview
+   * @typedef {{ count: number, titles: string[], diagnostics?: string[] }} TrashPreview
    * @typedef {{ removed: number }} PurgeSummary
    */
 
@@ -23,13 +23,16 @@
     appState.isBusy = true;
     appState.setStatus("info", "Previewing trash items...");
     try {
+      appState.addDebugLog(`Preview started: ${appState.selectedLibraryTitle} / ${appState.selectedShow.title} / ${appState.selectedSeason?.title || "All Seasons"}`, "Trash");
       const result = await invoke("preview_trash", {
         serverUrl: appState.serverUrl,
         token: appState.token,
         libraryId: appState.selectedLibraryId,
         showRatingKey: appState.selectedShow.rating_key,
         seasonRatingKey: appState.selectedSeason?.rating_key ?? null,
+        debug: appState.debugMode,
       });
+      for (const line of result.diagnostics ?? []) appState.addDebugLog(line, "Trash");
       preview = result;
       appState.setStatus("success", `Found ${result.count} trashed item(s).`);
     } catch (error) {

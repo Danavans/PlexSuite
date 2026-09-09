@@ -166,6 +166,7 @@ async fn preview_trash(
     library_id: String,
     show_rating_key: String,
     season_rating_key: Option<String>,
+    debug: bool,
 ) -> Result<TrashPreview, String> {
     plex::preview_trash(
         &app,
@@ -174,6 +175,7 @@ async fn preview_trash(
         &library_id,
         &show_rating_key,
         season_rating_key,
+        debug,
     )
     .await
 }
@@ -373,6 +375,7 @@ async fn scan_subtitle_streams(
     library_id: String,
     show_rating_key: String,
     season_rating_key: Option<String>,
+    debug: bool,
 ) -> Result<plex::subtitles::SubtitleScan, String> {
     plex::scan_subtitle_streams(
         &app,
@@ -381,6 +384,7 @@ async fn scan_subtitle_streams(
         &library_id,
         &show_rating_key,
         season_rating_key,
+        debug,
     )
     .await
 }

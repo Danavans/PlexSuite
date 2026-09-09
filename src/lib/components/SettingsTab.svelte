@@ -1,5 +1,35 @@
 <script>
   import { appState } from "../appState.svelte.js";
+  import { save } from "@tauri-apps/plugin-dialog";
+  import { invoke } from "@tauri-apps/api/core";
+
+  function exportableLogs() {
+    return [...appState.appLogs].reverse().map((entry) =>
+      `[${entry.timestamp}] [${entry.tab}] ${entry.type.toUpperCase()}: ${entry.message}`
+    ).join("\n");
+  }
+
+  /** @param {string} text */
+  function sanitizedLogText(text) {
+    return text
+      .replace(/([?&](?:X-Plex-Token|token|api_key)=)[^&\s]+/gi, "$1[REDACTED]")
+      .replace(/(X-Plex-Token[=:]\s*)[^\s,]+/gi, "$1[REDACTED]");
+  }
+
+  async function exportLogs() {
+    const now = new Date();
+    /** @param {number} value */
+    const part = (value) => String(value).padStart(2, "0");
+    const stamp = `${now.getFullYear()}${part(now.getMonth() + 1)}${part(now.getDate())}-${part(now.getHours())}${part(now.getMinutes())}${part(now.getSeconds())}`;
+    const path = await save({ defaultPath: `plexsuite-debug-${stamp}.txt`, filters: [{ name: "Text", extensions: ["txt"] }] });
+    if (!path) return;
+    try {
+      await invoke("save_text_file", { path, content: sanitizedLogText(exportableLogs()) });
+      appState.setStatus("success", "Logs exported.");
+    } catch (error) {
+      appState.setStatus("error", `Log export failed: ${error}`);
+    }
+  }
 </script>
 
 <section class="grid module-grid">
@@ -49,7 +79,12 @@
   </div>
   <div class="panel lift-2">
     <h2>Logs</h2>
+    <label class="toggle">
+      <input type="checkbox" checked={appState.debugMode} onchange={(event) => appState.setDebugMode(event.currentTarget.checked)} />
+      Debug mode
+    </label>
     <div class="actions">
+      <button data-variant="ghost" onclick={exportLogs}>Export logs</button>
       <button
         data-variant="ghost"
         onclick={() => {

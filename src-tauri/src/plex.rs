@@ -3,6 +3,7 @@ use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::Path;
+use std::time::Instant;
 use tauri::AppHandle;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -43,6 +44,15 @@ pub struct PurgeResult {
 pub struct TrashPreview {
     pub count: usize,
     pub titles: Vec<String>,
+    pub diagnostics: Vec<String>,
+}
+
+struct PlexJsonResponse {
+    value: Value,
+    status: reqwest::StatusCode,
+    response_ms: u128,
+    body_ms: u128,
+    parse_ms: u128,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -67,6 +77,18 @@ async fn plex_get_json(
     path: &str,
     query: Vec<(String, String)>,
 ) -> Result<Value, String> {
+    Ok(plex_get_json_timed(app, server_url, token, path, query)
+        .await?
+        .value)
+}
+
+async fn plex_get_json_timed(
+    app: &AppHandle,
+    server_url: &str,
+    token: &str,
+    path: &str,
+    query: Vec<(String, String)>,
+) -> Result<PlexJsonResponse, String> {
     let base = normalize_plex_url(server_url)?;
     let url = format!("{}/{}", base, path.trim_start_matches('/'));
     let mut url = Url::parse(&url).map_err(|e| e.to_string())?;
@@ -80,6 +102,7 @@ async fn plex_get_json(
 
     let client_id = get_client_id(app)?;
     let client = reqwest::Client::new();
+    let response_start = Instant::now();
     let response = client
         .get(url)
         .timeout(std::time::Duration::from_secs(30))
@@ -90,11 +113,23 @@ async fn plex_get_json(
         .send()
         .await
         .map_err(|e| e.without_url().to_string())?;
+    let response_ms = response_start.elapsed().as_millis();
     let status = response.status();
     if !status.is_success() {
         return Err(format!("Plex responded with status {status}"));
     }
-    response.json::<Value>().await.map_err(|e| e.to_string())
+    let body_start = Instant::now();
+    let body = response.text().await.map_err(|e| e.to_string())?;
+    let body_ms = body_start.elapsed().as_millis();
+    let parse_start = Instant::now();
+    let value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
+    Ok(PlexJsonResponse {
+        value,
+        status,
+        response_ms,
+        body_ms,
+        parse_ms: parse_start.elapsed().as_millis(),
+    })
 }
 
 async fn plex_delete(
@@ -456,9 +491,11 @@ pub async fn preview_trash(
     library_id: &str,
     show_rating_key: &str,
     season_rating_key: Option<String>,
+    debug: bool,
 ) -> Result<TrashPreview, String> {
+    let total_start = Instant::now();
     let path = format!("library/sections/{}/all", library_id);
-    let value = plex_get_json(
+    let response = plex_get_json_timed(
         app,
         server_url,
         token,
@@ -470,9 +507,26 @@ pub async fn preview_trash(
         ],
     )
     .await?;
+    let mut diagnostics = Vec::new();
+    if debug {
+        diagnostics.push(format!(
+            "Initial library metadata GET /{} -> {} in {} ms (body {} ms, JSON parse {} ms)",
+            path, response.status, response.response_ms, response.body_ms, response.parse_ms
+        ));
+    }
+    let parse_start = Instant::now();
+    let parsed_items = parse_metadata(&response.value);
+    if debug {
+        diagnostics.push(format!(
+            "Initial metadata parse: {} library items -> {} ms",
+            parsed_items.len(),
+            parse_start.elapsed().as_millis()
+        ));
+    }
     let mut titles = Vec::new();
     let mut count = 0;
-    for item in parse_metadata(&value) {
+    let filtering_start = Instant::now();
+    for item in parsed_items {
         let show_match = item
             .grandparent_rating_key
             .as_ref()
@@ -494,11 +548,20 @@ pub async fn preview_trash(
         let mut missing_part_ids = item.missing_part_ids.clone();
         let mut missing_media_ids = item.missing_media_ids.clone();
         if missing_part_ids.is_empty() && missing_media_ids.is_empty() && !item.is_trashed {
+            let fallback_start = Instant::now();
             if let Ok((extra_parts, extra_media)) =
                 fetch_missing_media(app, server_url, token, &item.rating_key).await
             {
                 missing_part_ids = extra_parts;
                 missing_media_ids = extra_media;
+            }
+            if debug {
+                diagnostics.push(format!(
+                    "fetch_missing_media ratingKey={} ({}) -> {} ms",
+                    item.rating_key,
+                    item.title,
+                    fallback_start.elapsed().as_millis()
+                ));
             }
         }
         if item.is_trashed {
@@ -516,7 +579,24 @@ pub async fn preview_trash(
             count += missing_count;
         }
     }
-    Ok(TrashPreview { count, titles })
+    if debug {
+        diagnostics.push(format!(
+            "Filtering/local preview processing -> {} ms",
+            filtering_start.elapsed().as_millis()
+        ));
+    }
+    if debug {
+        diagnostics.push(format!(
+            "Preview complete: {} item(s) in {} ms",
+            count,
+            total_start.elapsed().as_millis()
+        ));
+    }
+    Ok(TrashPreview {
+        count,
+        titles,
+        diagnostics,
+    })
 }
 
 pub async fn purge_trash(
@@ -633,8 +713,8 @@ async fn fetch_subtitle_episode(
     library_id: &str,
     show_key: &str,
     season_key: Option<&str>,
-) -> Result<Vec<SubtitlePart>, String> {
-    let value = plex_get_json(
+) -> Result<(Vec<SubtitlePart>, PlexJsonResponse, u128), String> {
+    let response = plex_get_json_timed(
         app,
         server_url,
         token,
@@ -645,7 +725,15 @@ async fn fetch_subtitle_episode(
         ],
     )
     .await?;
-    parse_subtitle_episode(&value, &ep.rating_key, library_id, show_key, season_key)
+    let processing_start = Instant::now();
+    let parts = parse_subtitle_episode(
+        &response.value,
+        &ep.rating_key,
+        library_id,
+        show_key,
+        season_key,
+    )?;
+    Ok((parts, response, processing_start.elapsed().as_millis()))
 }
 
 fn parse_subtitle_episode(
@@ -697,6 +785,7 @@ pub async fn scan_subtitle_streams(
     library_id: &str,
     show_rating_key: &str,
     season_rating_key: Option<String>,
+    debug: bool,
 ) -> Result<SubtitleScan, String> {
     if !numeric_id(library_id)
         || !numeric_id(show_rating_key)
@@ -707,6 +796,12 @@ pub async fn scan_subtitle_streams(
     {
         return Err("Invalid Plex scope".into());
     }
+    let total_start = Instant::now();
+    let scope_path = season_rating_key
+        .as_ref()
+        .map(|key| format!("library/metadata/{}/children", key))
+        .unwrap_or_else(|| format!("library/metadata/{}/allLeaves", show_rating_key));
+    let scope_start = Instant::now();
     let episodes = list_episodes(
         app,
         server_url,
@@ -715,8 +810,18 @@ pub async fn scan_subtitle_streams(
         season_rating_key.clone(),
     )
     .await?;
+    let mut diagnostics = Vec::new();
+    if debug {
+        diagnostics.push(format!(
+            "Episode scope GET /{} -> {} episodes in {} ms",
+            scope_path,
+            episodes.len(),
+            scope_start.elapsed().as_millis()
+        ));
+    }
     let mut results = Vec::new();
     for ep in episodes {
+        let episode_start = Instant::now();
         let result = fetch_subtitle_episode(
             app,
             server_url,
@@ -728,8 +833,32 @@ pub async fn scan_subtitle_streams(
         )
         .await;
         let (parts, error) = match result {
-            Ok(parts) => (parts, None),
-            Err(e) => (vec![], Some(e)),
+            Ok((parts, response, process_ms)) => {
+                if debug {
+                    let tracks = parts.iter().map(|part| part.streams.len()).sum::<usize>();
+                    diagnostics.push(format!("{} ratingKey={} metadata GET /library/metadata/{} -> {} in {} ms (body {} ms, JSON parse {} ms)", ep_code(&ep), ep.rating_key, ep.rating_key, response.status, response.response_ms, response.body_ms, response.parse_ms));
+                    diagnostics.push(format!(
+                        "{} parse/process -> {} ms, {} subtitle streams",
+                        ep_code(&ep),
+                        process_ms,
+                        tracks
+                    ));
+                }
+                (parts, None)
+            }
+            Err(e) => {
+                if debug {
+                    diagnostics.push(format!(
+                        "{} ratingKey={} metadata GET /library/metadata/{} failed after {} ms: {}",
+                        ep_code(&ep),
+                        ep.rating_key,
+                        ep.rating_key,
+                        episode_start.elapsed().as_millis(),
+                        e
+                    ));
+                }
+                (vec![], Some(e))
+            }
         };
         results.push(SubtitleEpisode {
             rating_key: ep.rating_key,
@@ -738,7 +867,21 @@ pub async fn scan_subtitle_streams(
             error,
         });
     }
-    Ok(summarize(results))
+    let mut scan = summarize(results);
+    if debug {
+        diagnostics.push(format!(
+            "Scan complete: {} episodes, {} subtitle tracks, total {} ms",
+            scan.scanned,
+            scan.tracks,
+            total_start.elapsed().as_millis()
+        ));
+    }
+    scan.diagnostics = diagnostics;
+    Ok(scan)
+}
+
+fn ep_code(ep: &EpisodeSummary) -> String {
+    format!("S{:02}E{:02}", ep.season_number, ep.episode_number)
 }
 
 async fn plex_select_subtitle(
@@ -786,6 +929,7 @@ pub async fn set_subtitle_variant(
         library_id,
         show_rating_key,
         season_rating_key,
+        false,
     )
     .await?;
     let mut result = SubtitleActionResult {
@@ -854,6 +998,7 @@ pub async fn remove_selected_subtitles(
         library_id,
         show_rating_key,
         season_rating_key.clone(),
+        false,
     )
     .await?;
     let safe = candidates(&scan.episodes, &categories);
@@ -892,7 +1037,7 @@ pub async fn remove_selected_subtitles(
             )
             .await
             {
-                Ok(parts) => {
+                Ok((parts, _, _)) => {
                     let fresh = SubtitleEpisode {
                         parts,
                         ..owner.clone()

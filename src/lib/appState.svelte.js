@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 
 /**
- * @typedef {"info" | "success" | "error"} StatusType
+ * @typedef {"info" | "success" | "error" | "debug"} StatusType
  * @typedef {{ type: StatusType, message: string }} Status
  * @typedef {{ id: string, title: string }} PlexLibrary
  * @typedef {{ rating_key: string, title: string }} PlexShow
@@ -17,6 +17,7 @@ class AppState {
     status = $state({ type: "info", message: "" });
     /** @type {LogEntry[]} */
     appLogs = $state([]);
+    debugMode = $state(false);
     
     // Connection State
     isConnected = $state(false);
@@ -68,10 +69,24 @@ class AppState {
         else if (this.activeTab === "plexmatch") tabLabel = "PlexMatch";
         else if (this.activeTab === "settings") tabLabel = "Settings";
 
-        this.appLogs = [
-            { type, message, timestamp, tab: tabLabel },
-            ...this.appLogs
-        ].slice(0, 200);
+        this.addLog(type, message, tabLabel);
+    }
+
+    /** @param {StatusType} type @param {string} message @param {string} tab */
+    addLog(type, message, tab) {
+        this.appLogs = [{ type, message, timestamp: new Date().toLocaleTimeString("en-GB", { hour12: false }), tab }, ...this.appLogs]
+            .slice(0, this.debugMode ? 10000 : 200);
+    }
+
+    /** @param {string} message @param {string} tab */
+    addDebugLog(message, tab) {
+        if (this.debugMode) this.addLog("debug", message, tab);
+    }
+
+    /** @param {boolean} enabled */
+    setDebugMode(enabled) {
+        this.debugMode = enabled;
+        if (!enabled) this.appLogs = this.appLogs.slice(0, 200);
     }
 
     async loadSettings() {

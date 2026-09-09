@@ -3,7 +3,7 @@
   import { appState } from "../appState.svelte.js";
   type Key = { languageTag: string; forced: boolean; hearingImpaired: boolean };
   type Variant = { key: Key; language: string; languageCode: string | null; episodeCount: number; totalEpisodes: number; selectedCount: number; missing: string[] };
-  type Scan = { variants: Variant[]; counts: Record<string, number>; tracks: number; scanned: number; errors: string[]; episodes: { parts: { streams: { key: string | null; source: string }[] }[] }[] };
+  type Scan = { variants: Variant[]; counts: Record<string, number>; tracks: number; scanned: number; errors: string[]; diagnostics: string[]; episodes: { parts: { streams: { key: string | null; source: string }[] }[] }[] };
   type Result = { applied: number; removed: number; missing: string[]; errors: string[]; skippedUnsafe: number };
   let scan = $state<Scan | null>(null);
   let selected = $state("");
@@ -69,7 +69,9 @@
         appState.setStatus(result.errors.length ? "error" : "success", summary);
       }
       scan = null;
-      const fresh = await invoke<Scan>("scan_subtitle_streams", request);
+      if (action === "scan") appState.addDebugLog(`Scan started: ${appState.selectedShow?.title || "Unknown show"} / ${appState.selectedSeason?.title || "All Seasons"}`, "Sub Selector");
+      const fresh = await invoke<Scan>("scan_subtitle_streams", { ...request, debug: appState.debugMode });
+      for (const line of fresh.diagnostics ?? []) appState.addDebugLog(line, "Sub Selector");
       if (scope === requestScope) { scan = fresh; scannedScope = requestScope; }
       if (action === "scan") { summary = `${fresh.scanned} episodes scanned · ${fresh.tracks} subtitle tracks found · Errors: ${fresh.errors.length}`; appState.setStatus(fresh.errors.length ? "error" : "success", summary); }
       else if (fresh.errors.length) appState.setStatus("error", `${summary}. Refresh has ${fresh.errors.length} error(s).`);
