@@ -79,20 +79,22 @@
   </div>
   <div class="panel lift-2">
     <h2>Logs</h2>
-    <label class="toggle">
-      <input type="checkbox" checked={appState.debugMode} onchange={(event) => appState.setDebugMode(event.currentTarget.checked)} />
-      Debug mode
-    </label>
-    <div class="actions">
-      <button data-variant="ghost" onclick={exportLogs}>Export logs</button>
-      <button
-        data-variant="ghost"
-        onclick={() => {
-          appState.appLogs = [];
-        }}
-      >
-        Clear logs
-      </button>
+    <div class="logs-controls">
+      <div class="actions">
+        <button data-variant="ghost" onclick={exportLogs}>Export logs</button>
+        <button
+          data-variant="ghost"
+          onclick={() => {
+            appState.appLogs = [];
+          }}
+        >
+          Clear logs
+        </button>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" checked={appState.debugMode} onchange={(event) => appState.setDebugMode(event.currentTarget.checked)} />
+        Debug mode
+      </label>
     </div>
     <div class="debug">
       {#if appState.appLogs.length === 0}

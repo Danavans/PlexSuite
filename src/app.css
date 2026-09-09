@@ -985,6 +985,18 @@ button:hover:not(:disabled) {
   column-gap: 22px;
   align-items: stretch;
 }
+
+.logs-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.logs-controls .actions {
+  margin: 0;
+}
 .sub-selector-stack {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
