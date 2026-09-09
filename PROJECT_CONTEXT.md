@@ -2,7 +2,7 @@
 
 ## Resume rapide
 - Projet dans `D:\Medias\Divers\Tools\PlexSuite\PlexSuite` (Tauri + Svelte).
-- Objectif: app 3-en-1 pour Plex (Trash Selector, Sub Uploader, Plexmatch Generator) avec UI en anglais.
+- Objectif: app 4-en-1 pour Plex (Trash Selector, Sub Uploader, Sub Selector, Plexmatch Generator) avec UI en anglais.
 - Theme: look Plex Trash Selector (fond sombre global, cards sombres, texte clair, accents orange). Aucun panel clair.
 
 ## Agent instructions
@@ -21,12 +21,13 @@
 ## Onglets et layouts
 - Trash Selector: layout 2 colonnes / 2 lignes. Gauche: Library Scope (haut) + Purge Controls (bas). Droite: Preview List (colonne pleine). Preview List scroll interne max-height 480px.
 - Sub Uploader: Library & Target + Subtitle Source cote a cote (50/50). Preview en dessous pleine largeur. Choix dossier via bouton (pas de drag/drop).
+- Sub Selector: deux colonnes responsives. A gauche, Library & Target avec le scan, puis le panneau compact Subtitle Cleanup. A droite, Available Subtitles avec les variantes exactes et Set as Default. Sur petit ecran, les colonnes s'empilent naturellement.
 - Plexmatch Generator: TMDb lookup en haut, episodes + video files cote a cote, mapping dessous, preferences en bas, preview a droite.
 
 ## Sub Selector cleanup (September 2026)
-- Scan and Set as Default continue to use JSON and exact language/Forced/SDH variants.
-- Cleanup has unchecked-by-default Physical Sidecar, Plex Uploaded and Unknown External categories; Embedded has no checkbox and is never deletable.
-- Confirmation includes category-specific disk deletion warnings. Removal uses Plex DELETE only and revalidates current scope, identity and selected category before each stream deletion.
+- Scan and Set as Default use JSON and exact language/region/script, Forced and SDH variants. Set as Default changes only matching streams for the Plex user associated with the token; episodes without a match remain unchanged, and each media version/part is handled independently.
+- Cleanup is compact and has unchecked-by-default Physical Sidecar, Plex Uploaded and Unknown External categories. Unknown External is hidden when its count is zero. Embedded has no selectable category and is always protected from deletion.
+- Confirmation includes category-specific disk-deletion warnings. Removal uses Plex DELETE only and revalidates current scope, identity and selected category immediately before each stream deletion; changed, malformed, conflicting or unsafe streams are skipped.
 - Root cause confirmed with a read-only JSON/XML comparison: Plex omits external stream index; python-plexapi defaults it to -1. PlexSuite now handles the absent attribute equivalently while retaining malformed values as uncertain.
 - Development diagnostic: `scripts/diagnose-subtitle-metadata.ps1` (PowerShell 7, GET only, token-free classification fields).
 
@@ -58,9 +59,15 @@
 - État Centralisé: `appState.svelte.js` gère la logique métier et les données partagées via Svelte 5 Runes.
 - Syntaxe: Migration complète vers Svelte 5 (`onclick`, `$state`).
 
+## Plex HTTP transport (September 2026)
+- Un unique `reqwest::Client` Plex, de durée de vie du processus, est partagé par les GET, DELETE, POST d'upload de sous-titres et PUT de sélection de sous-titres.
+- Sa création ne génère aucun trafic en arrière-plan quand l'application est inactive. Les comportements de requête et timeouts existants restent inchangés.
+- Toute future opération HTTP Plex doit réutiliser ce client partagé. TMDb conserve ses créations de client actuelles et n'a pas été modifié par ce refactoring.
+
 ## Logs
-- Nouveau panneau Logs dans Settings, alimente par setStatus().
-- Logs avec timestamp + onglet.
+- Panneau Logs dans Settings, alimenté par `setStatus()`, avec timestamp + onglet. Les logs sont uniquement en session et ne sont pas persistés automatiquement.
+- Debug mode est optionnel et désactivé par défaut. La rétention est de 200 logs normalement et de 10 000 quand Debug mode est actif.
+- Les logs courants peuvent être exportés en texte brut. En Debug mode, Sub Selector et Trash Selector ajoutent des diagnostics détaillés de durée de scan.
 
 ## Icons
 - Nouvelle icone generee (P stylise, fond sombre + accent orange) remplace toutes les PNG et icon.ico dans `src-tauri/icons`.
@@ -73,12 +80,16 @@
 
 ## Fichiers modifies principaux
 - `src/lib/appState.svelte.js`: Store central.
-- `src/lib/components/*.svelte`: Composants par onglet.
+- `src/lib/components/SubSelectorTab.svelte`: Scan, sélection de variantes exactes et cleanup sûr des sous-titres.
+- `src/lib/components/SettingsTab.svelte`: Réglages, Debug mode et export des logs.
+- `src/lib/components/TrashTab.svelte`: Preview Trash et diagnostics de scan.
+- `src/lib/components/*.svelte`: Autres composants par onglet.
 - `src/routes/+page.svelte`: Layout controller.
 - `src/app.css`: theme global, layout grids, status dot, subs preview bubbles, etc.
 - `src/app.html`: racine `#app-root` pour background global.
-- `src-tauri/src/plex.rs`: upload subtitles via metadata endpoint.
-- `src-tauri/src/lib.rs`: upload_subtitles utilise episode_rating_key direct.
+- `src-tauri/src/plex.rs`: Helpers Plex, client HTTP partagé, diagnostics et upload via metadata endpoint.
+- `src-tauri/src/plex/subtitles.rs`: Parsing, classification et sécurité des sous-titres.
+- `src-tauri/src/lib.rs`: Commandes Tauri, dont upload_subtitles avec episode_rating_key direct.
 - `src-tauri/tauri.conf.json`: bundle inactive, bundle icon set, windows icon property removed.
 
 ## Notes
@@ -101,3 +112,8 @@
 - 2026-01-09 21:28:51: Update layouts (Trash/Subs), subtitle upload fix (metadata endpoint), logs panel added, tab names renamed, PlexMatch tweaks, dark theme refinements.
 - 2026-01-09 21:45:12: Sub uploader preview formatting, status dot styling, logs + settings updates, icon generation, README updated, bundle config adjustments.
 - 2026-01-10 00:00:00: Header rework (badges alignes, tabs a gauche, description a droite), tabs style/animations, panel lift animations, settings panel aligne a gauche, window height 815, badge size adjustments.
+- 2026-09-09: Sub Selector ajoute: scan de variantes exactes, Set as Default par version/part et gestion des episodes sans correspondance.
+- 2026-09-09: Subtitle Cleanup finalise: classification Physical Sidecar / Plex Uploaded / Unknown External, Embedded protege, avertissements et revalidation Plex DELETE avant suppression.
+- 2026-09-09: UX Sub Selector stabilisee: layout desktop a deux colonnes responsive et panneau cleanup compact.
+- 2026-09-09: Logs enrichis avec Debug mode optionnel, export texte brut et diagnostics de timing pour les scans Sub Selector et Trash Selector.
+- 2026-09-09: Investigation de performance/transport: client reqwest Plex partage pour les operations GET, DELETE, POST et PUT, sans modifier les comportements ou timeouts existants.

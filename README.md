@@ -34,6 +34,8 @@ PlexSuite saves its settings next to the executable in a `settings.json` file. T
 
 To reset the app, close PlexSuite and delete `settings.json`.
 
+Settings also includes session-only logs. Enable Debug mode only while diagnosing a scan: it adds detailed timing entries for Sub Selector and Trash Selector, and the current logs can be exported as plain text.
+
 ## How To Use
 
 ### Trash Selector
