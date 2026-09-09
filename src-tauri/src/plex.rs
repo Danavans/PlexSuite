@@ -82,13 +82,14 @@ async fn plex_get_json(
     let client = reqwest::Client::new();
     let response = client
         .get(url)
+        .timeout(std::time::Duration::from_secs(30))
         .header("Accept", "application/json")
         .header("X-Plex-Client-Identifier", client_id)
         .header("X-Plex-Product", "PlexSuite")
         .header("X-Plex-Version", "1.0.0")
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.without_url().to_string())?;
     let status = response.status();
     if !status.is_success() {
         return Err(format!("Plex responded with status {status}"));
@@ -114,12 +115,13 @@ async fn plex_delete(
     let client = reqwest::Client::new();
     let response = client
         .delete(url)
+        .timeout(std::time::Duration::from_secs(30))
         .header("X-Plex-Client-Identifier", client_id)
         .header("X-Plex-Product", "PlexSuite")
         .header("X-Plex-Version", "1.0.0")
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.without_url().to_string())?;
     let status = response.status();
     if !status.is_success() {
         return Err(format!("Plex responded with status {status} for {path}"));
@@ -135,10 +137,7 @@ async fn plex_post_subtitle(
     file_path: &str,
 ) -> Result<(), String> {
     let base = normalize_plex_url(server_url)?;
-    let url = format!(
-        "{}/library/metadata/{}/subtitles",
-        base, episode_rating_key
-    );
+    let url = format!("{}/library/metadata/{}/subtitles", base, episode_rating_key);
     let mut url = Url::parse(&url).map_err(|e| e.to_string())?;
     {
         let mut pairs = url.query_pairs_mut();
@@ -185,10 +184,7 @@ fn parse_libraries(value: &Value) -> Vec<Library> {
         .unwrap_or_default();
     let mut libraries = Vec::new();
     for dir in directories {
-        let section_type = dir
-            .get("type")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let section_type = dir.get("type").and_then(|v| v.as_str()).unwrap_or("");
         if section_type != "show" {
             continue;
         }
@@ -592,7 +588,10 @@ pub async fn purge_trash(
                 for media_id in &missing_media_ids {
                     let primary_path =
                         format!("library/metadata/{}/media/{}", item.rating_key, media_id);
-                    if plex_delete(app, server_url, token, &primary_path).await.is_err() {
+                    if plex_delete(app, server_url, token, &primary_path)
+                        .await
+                        .is_err()
+                    {
                         let fallback_path = format!("library/media/{}", media_id);
                         plex_delete(app, server_url, token, &fallback_path).await?;
                     }
@@ -621,4 +620,333 @@ pub async fn upload_subtitle_to_episode(
     file_path: &str,
 ) -> Result<(), String> {
     plex_post_subtitle(app, server_url, token, episode_rating_key, file_path).await
+}
+
+pub mod subtitles;
+use subtitles::*;
+
+async fn fetch_subtitle_episode(
+    app: &AppHandle,
+    server_url: &str,
+    token: &str,
+    ep: &EpisodeSummary,
+    library_id: &str,
+    show_key: &str,
+    season_key: Option<&str>,
+) -> Result<Vec<SubtitlePart>, String> {
+    let value = plex_get_json(
+        app,
+        server_url,
+        token,
+        &format!("library/metadata/{}", ep.rating_key),
+        vec![
+            ("includeMedia".into(), "1".into()),
+            ("includeAllStreams".into(), "1".into()),
+        ],
+    )
+    .await?;
+    parse_subtitle_episode(&value, &ep.rating_key, library_id, show_key, season_key)
+}
+
+fn parse_subtitle_episode(
+    value: &Value,
+    rating_key: &str,
+    library_id: &str,
+    show_key: &str,
+    season_key: Option<&str>,
+) -> Result<Vec<SubtitlePart>, String> {
+    let item = value["MediaContainer"]["Metadata"]
+        .as_array()
+        .and_then(|a| a.first())
+        .ok_or("Episode metadata unavailable")?;
+    if scalar(&item["ratingKey"]).as_deref() != Some(rating_key)
+        || scalar(&item["grandparentRatingKey"]).as_deref() != Some(show_key)
+        || scalar(&item["librarySectionID"]).as_deref() != Some(library_id)
+        || season_key
+            .map(|key| scalar(&item["parentRatingKey"]).as_deref() != Some(key))
+            .unwrap_or(false)
+    {
+        return Err("Episode metadata does not match the selected scope".into());
+    }
+    let mut parts = Vec::new();
+    for media in item["Media"].as_array().into_iter().flatten() {
+        for part in media["Part"].as_array().into_iter().flatten() {
+            let mut streams = Vec::new();
+            for raw in part["Stream"].as_array().into_iter().flatten() {
+                match scalar(&raw["streamType"]).as_deref() {
+                    Some("3") => streams.push(
+                        parse_stream(raw).ok_or("Malformed subtitle flags; episode skipped")?,
+                    ),
+                    Some("1" | "2" | "4") => {}
+                    _ => return Err("Unknown stream type; episode skipped".into()),
+                }
+            }
+            parts.push(SubtitlePart {
+                id: scalar(&part["id"]).unwrap_or_default(),
+                streams,
+            });
+        }
+    }
+    Ok(parts)
+}
+
+pub async fn scan_subtitle_streams(
+    app: &AppHandle,
+    server_url: &str,
+    token: &str,
+    library_id: &str,
+    show_rating_key: &str,
+    season_rating_key: Option<String>,
+) -> Result<SubtitleScan, String> {
+    if !numeric_id(library_id)
+        || !numeric_id(show_rating_key)
+        || season_rating_key
+            .as_ref()
+            .map(|s| !numeric_id(s))
+            .unwrap_or(false)
+    {
+        return Err("Invalid Plex scope".into());
+    }
+    let episodes = list_episodes(
+        app,
+        server_url,
+        token,
+        show_rating_key,
+        season_rating_key.clone(),
+    )
+    .await?;
+    let mut results = Vec::new();
+    for ep in episodes {
+        let result = fetch_subtitle_episode(
+            app,
+            server_url,
+            token,
+            &ep,
+            library_id,
+            show_rating_key,
+            season_rating_key.as_deref(),
+        )
+        .await;
+        let (parts, error) = match result {
+            Ok(parts) => (parts, None),
+            Err(e) => (vec![], Some(e)),
+        };
+        results.push(SubtitleEpisode {
+            rating_key: ep.rating_key,
+            code: format!("S{:02}E{:02}", ep.season_number, ep.episode_number),
+            parts,
+            error,
+        });
+    }
+    Ok(summarize(results))
+}
+
+async fn plex_select_subtitle(
+    app: &AppHandle,
+    server_url: &str,
+    token: &str,
+    part: &str,
+    stream: &str,
+) -> Result<(), String> {
+    if !numeric_id(part) || !numeric_id(stream) {
+        return Err("Invalid part or stream ID".into());
+    }
+    let url = format!("{}/library/parts/{}", normalize_plex_url(server_url)?, part);
+    let response = reqwest::Client::new()
+        .put(url)
+        // Each part is matched independently: never propagate an ID to a different part.
+        .query(&[("subtitleStreamID", stream), ("allParts", "0")])
+        .header("X-Plex-Token", token)
+        .header("X-Plex-Client-Identifier", get_client_id(app)?)
+        .header("X-Plex-Product", "PlexSuite")
+        .header("X-Plex-Version", "1.0.0")
+        .timeout(std::time::Duration::from_secs(30))
+        .send()
+        .await
+        .map_err(|e| e.without_url().to_string())?;
+    if !response.status().is_success() {
+        return Err(format!("Plex responded with status {}", response.status()));
+    }
+    Ok(())
+}
+
+pub async fn set_subtitle_variant(
+    app: &AppHandle,
+    server_url: &str,
+    token: &str,
+    library_id: &str,
+    show_rating_key: &str,
+    season_rating_key: Option<String>,
+    variant: VariantKey,
+) -> Result<SubtitleActionResult, String> {
+    let scan = scan_subtitle_streams(
+        app,
+        server_url,
+        token,
+        library_id,
+        show_rating_key,
+        season_rating_key,
+    )
+    .await?;
+    let mut result = SubtitleActionResult {
+        errors: scan.errors,
+        ..Default::default()
+    };
+    for ep in scan.episodes {
+        if ep.error.is_some() {
+            continue;
+        }
+        let mut found = false;
+        let mut failed = false;
+        for part in ep.parts {
+            let matching = part.streams.iter().filter(|s| s.variant == variant);
+            // Prefer an already selected equivalent track, otherwise use metadata order.
+            let stream = matching
+                .clone()
+                .find(|s| s.selected)
+                .or_else(|| matching.into_iter().next());
+            if let Some(stream) = stream {
+                found = true;
+                let update = plex_select_subtitle(
+                    app,
+                    server_url,
+                    token,
+                    &part.id,
+                    stream.id.as_deref().unwrap_or(""),
+                )
+                .await;
+                if let Err(e) = update {
+                    failed = true;
+                    result
+                        .errors
+                        .push(format!("{} (part {}): {}", ep.code, part.id, e));
+                }
+            }
+        }
+        if found && !failed {
+            result.applied += 1;
+        }
+        if !found {
+            result.missing.push(ep.code);
+        }
+    }
+    Ok(result)
+}
+
+pub async fn remove_uploaded_subtitles(
+    app: &AppHandle,
+    server_url: &str,
+    token: &str,
+    library_id: &str,
+    show_rating_key: &str,
+    season_rating_key: Option<String>,
+    reviewed_keys: Vec<String>,
+) -> Result<SubtitleActionResult, String> {
+    // Only keys shown in the confirmed preview are eligible. All metadata comes from Plex again.
+    let scan = scan_subtitle_streams(
+        app,
+        server_url,
+        token,
+        library_id,
+        show_rating_key,
+        season_rating_key.clone(),
+    )
+    .await?;
+    let safe = candidates(&scan.episodes);
+    let reviewed: std::collections::BTreeSet<_> = reviewed_keys.into_iter().collect();
+    let mut result = SubtitleActionResult {
+        errors: scan.errors.clone(),
+        ..Default::default()
+    };
+    for key in reviewed {
+        if !safe.contains(&key) {
+            result.skipped_unsafe += 1;
+            continue;
+        }
+        // Re-fetch the owning episode immediately before deletion, not just at batch start.
+        let owner = scan.episodes.iter().find(|e| {
+            e.parts
+                .iter()
+                .any(|p| p.streams.iter().any(|s| s.key.as_ref() == Some(&key)))
+        });
+        if let Some(owner) = owner {
+            let ep = EpisodeSummary {
+                rating_key: owner.rating_key.clone(),
+                title: String::new(),
+                season_number: 0,
+                episode_number: 0,
+                part_ids: vec![],
+            };
+            match fetch_subtitle_episode(
+                app,
+                server_url,
+                token,
+                &ep,
+                library_id,
+                show_rating_key,
+                season_rating_key.as_deref(),
+            )
+            .await
+            {
+                Ok(parts) => {
+                    let fresh = SubtitleEpisode {
+                        parts,
+                        ..owner.clone()
+                    };
+                    if !candidates(&[fresh]).contains(&key) {
+                        result.skipped_unsafe += 1;
+                        continue;
+                    }
+                    match plex_delete(app, server_url, token, &key).await {
+                        Ok(()) => result.removed += 1,
+                        Err(e) => result.errors.push(format!("{}: {}", owner.code, e)),
+                    }
+                }
+                Err(e) => result.errors.push(format!("{}: {}", owner.code, e)),
+            }
+        }
+    }
+    Ok(result)
+}
+
+#[cfg(test)]
+mod subtitle_metadata_tests {
+    use super::*;
+    use serde_json::json;
+    fn metadata() -> Value {
+        json!({"MediaContainer":{"Metadata":[{"ratingKey":"10","grandparentRatingKey":"2","parentRatingKey":"3","librarySectionID":1,"Media":[
+            {"Part":[{"id":20,"Stream":[{"id":30,"streamType":3,"index":0,"languageTag":"fr-FR"}, {"streamType":1}]}, {"id":21,"Stream":null}]},
+            {"Part":[{"id":22,"Stream":[{"id":31,"streamType":3,"index":-1,"key":"/library/streams/31","transient":"0"}]}]}
+        ]}]}})
+    }
+    #[test]
+    fn validates_library_show_season_and_episode() {
+        let value = metadata();
+        assert!(parse_subtitle_episode(&value, "10", "1", "2", Some("3")).is_ok());
+        assert!(parse_subtitle_episode(&value, "10", "1", "2", None).is_ok());
+        for (ep, lib, show, season) in [
+            ("11", "1", "2", "3"),
+            ("10", "9", "2", "3"),
+            ("10", "1", "9", "3"),
+            ("10", "1", "2", "9"),
+        ] {
+            assert!(parse_subtitle_episode(&value, ep, lib, show, Some(season)).is_err());
+        }
+    }
+    #[test]
+    fn handles_multiple_versions_parts_empty_and_malformed_streams() {
+        let mut value = metadata();
+        let parts = parse_subtitle_episode(&value, "10", "1", "2", None).unwrap();
+        assert_eq!(parts.len(), 3);
+        assert_eq!(parts.iter().map(|p| p.streams.len()).sum::<usize>(), 2);
+        assert_eq!(parts[2].streams[0].source, "Plex Uploaded");
+        value["MediaContainer"]["Metadata"][0]["Media"][0]["Part"][0]["Stream"][0]["forced"] =
+            json!("invalid");
+        assert!(parse_subtitle_episode(&value, "10", "1", "2", None).is_err());
+        value["MediaContainer"]["Metadata"][0]["Media"] = Value::Null;
+        assert!(parse_subtitle_episode(&value, "10", "1", "2", None)
+            .unwrap()
+            .is_empty());
+        assert!(parse_subtitle_episode(&json!({}), "10", "1", "2", None).is_err());
+    }
 }

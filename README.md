@@ -4,9 +4,10 @@ PlexSuite is a portable desktop toolbox for Plex TV libraries. It brings togethe
 
 ## What It Does
 
-PlexSuite includes three tools:
+PlexSuite includes four tools:
 
 - Trash Selector: preview and selectively purge trashed or missing media from a Plex TV library.
+- Sub Selector: select exact subtitle variants and conservatively clean up Plex-uploaded subtitles.
 - Sub Uploader: match subtitle files to episodes and upload them to Plex in bulk.
 - Plexmatch Generator: use TMDb episode data and local video files to create a `.plexmatch` file.
 
@@ -54,6 +55,17 @@ Use this when you have subtitle files in a folder and want to send them to Plex.
 3. Preview the automatic matching.
 4. Adjust the mapping if needed.
 5. Upload the matched subtitles.
+
+### Sub Selector
+
+1. Select a TV library, show, and season (or All Seasons), then click **Scan Subtitles**.
+2. Expand a language and select an exact region/script, Forced, and SDH variant. Missing episodes and scan errors can be inspected separately.
+3. **Set as Default** selects matching subtitle streams for the Plex user associated with the token. It leaves episodes without a match unchanged and matches each media version/part independently. If equivalent streams coexist in a part, an already selected stream is preferred, otherwise the first matching stream is used.
+4. **Remove All Uploaded Subtitles** previews a count and requests confirmation for the displayed scope. Only reviewed stream keys are eligible; the backend checks fresh Plex metadata and checks the owning episode again immediately before each DELETE.
+
+Cleanup requires a subtitle stream with index -1, a numeric `/library/streams/<id>` key matching its ID, and an explicitly present numeric/string zero `transient`. Missing/null or unrecognised values never qualify. Embedded tracks, physical sidecars and unknown external streams are excluded. No subtitle files are removed directly from the filesystem. Classification follows observed Plex metadata; uncertain records are retained.
+
+The scan and actions use direct Rust HTTP requests. No Python runtime is required. Global language preferences, audio selections and media files are not changed. A failed episode/stream is reported and processing continues. Refresh the scan after external changes in Plex.
 
 ### Plexmatch Generator
 

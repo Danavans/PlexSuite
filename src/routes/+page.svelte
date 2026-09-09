@@ -1,6 +1,7 @@
 <script>
   import { appState } from "../lib/appState.svelte.js";
   import TrashTab from "../lib/components/TrashTab.svelte";
+  import SubSelectorTab from "../lib/components/SubSelectorTab.svelte";
   import SubsTab from "../lib/components/SubsTab.svelte";
   import PlexmatchTab from "../lib/components/PlexmatchTab.svelte";
   import SettingsTab from "../lib/components/SettingsTab.svelte";
@@ -8,7 +9,7 @@
   const tabDescription = $derived(
     appState.activeTab === "trash"
       ? "Purge Plex trash selectively for a show or season with a safe dry run."
-      : appState.activeTab === "subs"
+      : appState.activeTab === "subselector" ? "Select exact subtitle variants and remove Plex-uploaded subtitles." : appState.activeTab === "subs"
         ? "Bulk upload subtitles by auto-matching episodes from filenames."
         : appState.activeTab === "plexmatch"
           ? "Map TMDb episodes to local files and export a PlexMatch file."
@@ -52,6 +53,9 @@
         >
           Sub Uploader
         </button>
+        <button class:active-tab={appState.activeTab === "subselector"} onclick={() => (appState.activeTab = "subselector")}>
+          Sub Selector
+        </button>
         <button
           class:active-tab={appState.activeTab === "plexmatch"}
           onclick={() => (appState.activeTab = "plexmatch")}
@@ -72,6 +76,8 @@
 
   {#if appState.activeTab === "trash"}
     <TrashTab />
+  {:else if appState.activeTab === "subselector"}
+    <SubSelectorTab />
   {:else if appState.activeTab === "subs"}
     <SubsTab />
   {:else if appState.activeTab === "plexmatch"}
@@ -80,6 +86,15 @@
     <SettingsTab />
   {/if}
 </main>
+
+{#if appState.activeTab === "subselector" && appState.isBusy}
+  <div class="modal-backdrop blocking">
+    <div class="modal modal-loading" role="status">
+      <div class="loader" aria-hidden="true"></div>
+      <p>{appState.status.message}</p>
+    </div>
+  </div>
+{/if}
 
 <div class={`status-bar ${appState.status.type}`}>
   {appState.status.message || "Ready."}

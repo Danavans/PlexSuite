@@ -63,6 +63,7 @@ class AppState {
         const timestamp = new Date().toLocaleTimeString("en-GB", { hour12: false });
         let tabLabel = "System";
         if (this.activeTab === "trash") tabLabel = "Trash";
+        else if (this.activeTab === "subselector") tabLabel = "Sub Selector";
         else if (this.activeTab === "subs") tabLabel = "Subtitles";
         else if (this.activeTab === "plexmatch") tabLabel = "PlexMatch";
         else if (this.activeTab === "settings") tabLabel = "Settings";

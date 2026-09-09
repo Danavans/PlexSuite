@@ -75,7 +75,10 @@ fn scan_subtitle_files(root: &Path) -> Result<Vec<PathBuf>, String> {
             }
             if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
                 let lower = ext.to_lowercase();
-                if subtitle_extensions().iter().any(|allowed| allowed == &lower) {
+                if subtitle_extensions()
+                    .iter()
+                    .any(|allowed| allowed == &lower)
+                {
                     files.push(path);
                 }
             }
@@ -353,8 +356,73 @@ pub fn run() {
             tmdb_list_episodes,
             preview_subtitles,
             upload_subtitles,
+            scan_subtitle_streams,
+            set_subtitle_variant,
+            remove_uploaded_subtitles,
             save_text_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[tauri::command]
+async fn scan_subtitle_streams(
+    app: AppHandle,
+    server_url: String,
+    token: String,
+    library_id: String,
+    show_rating_key: String,
+    season_rating_key: Option<String>,
+) -> Result<plex::subtitles::SubtitleScan, String> {
+    plex::scan_subtitle_streams(
+        &app,
+        &server_url,
+        &token,
+        &library_id,
+        &show_rating_key,
+        season_rating_key,
+    )
+    .await
+}
+#[tauri::command]
+async fn set_subtitle_variant(
+    app: AppHandle,
+    server_url: String,
+    token: String,
+    library_id: String,
+    show_rating_key: String,
+    season_rating_key: Option<String>,
+    variant: plex::subtitles::VariantKey,
+) -> Result<plex::subtitles::SubtitleActionResult, String> {
+    plex::set_subtitle_variant(
+        &app,
+        &server_url,
+        &token,
+        &library_id,
+        &show_rating_key,
+        season_rating_key,
+        variant,
+    )
+    .await
+}
+#[tauri::command]
+async fn remove_uploaded_subtitles(
+    app: AppHandle,
+    server_url: String,
+    token: String,
+    library_id: String,
+    show_rating_key: String,
+    season_rating_key: Option<String>,
+    reviewed_keys: Vec<String>,
+) -> Result<plex::subtitles::SubtitleActionResult, String> {
+    plex::remove_uploaded_subtitles(
+        &app,
+        &server_url,
+        &token,
+        &library_id,
+        &show_rating_key,
+        season_rating_key,
+        reviewed_keys,
+    )
+    .await
 }
