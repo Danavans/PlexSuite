@@ -99,20 +99,24 @@
       </div>
     </div>
     <div class="panel lift-2">
-      <h2>Subtitle Cleanup</h2>
+      <div class="sub-cleanup-header">
+        <h2>Subtitle Cleanup</h2>
+        <p>Remove external subtitles in scope.</p>
+      </div>
       {#if valid}
         <div class="sub-cleanup-categories">
           {#each cleanupOptions as category}
-            <label class="sub-cleanup-category">
-              <input type="checkbox" bind:group={cleanupCategories} value={category} disabled={!valid || appState.isBusy || !scan?.counts[category]} />
-              <span>{category}</span>
-              <strong>{scan?.counts[category] || 0}</strong>
-            </label>
+            {#if category !== "Unknown External" || scan!.counts[category] > 0}
+              <label class="sub-cleanup-category">
+                <input type="checkbox" bind:group={cleanupCategories} value={category} disabled={!valid || appState.isBusy || !scan?.counts[category]} />
+                <span>{category}</span>
+                <strong>{scan?.counts[category] || 0}</strong>
+              </label>
+            {/if}
           {/each}
-          <div class="sub-cleanup-category sub-cleanup-embedded"><span>Embedded</span><strong>{scan?.counts.Embedded || 0}</strong></div>
+          <div class="sub-cleanup-category sub-cleanup-embedded"><input type="checkbox" checked disabled aria-label="Embedded subtitles are always preserved" /><span>Embedded</span><strong>{scan?.counts.Embedded || 0}</strong></div>
         </div>
       {/if}
-      <p class="kicker">Remove external subtitles in the selected scope.</p>
       <div class="actions"><button data-variant="primary" onclick={() => confirmOpen = true} disabled={!valid || !cleanupKeys.length || appState.isBusy}>Remove Selected</button></div>
     </div>
   </div>
