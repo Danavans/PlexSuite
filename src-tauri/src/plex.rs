@@ -1,10 +1,14 @@
 use crate::settings::{get_client_id, normalize_plex_url};
+use once_cell::sync::Lazy;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::Path;
 use std::time::Instant;
 use tauri::AppHandle;
+
+// All Plex transport helpers share this pool; creating it performs no network activity.
+static PLEX_CLIENT: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Library {
@@ -101,9 +105,8 @@ async fn plex_get_json_timed(
     }
 
     let client_id = get_client_id(app)?;
-    let client = reqwest::Client::new();
     let response_start = Instant::now();
-    let response = client
+    let response = PLEX_CLIENT
         .get(url)
         .timeout(std::time::Duration::from_secs(30))
         .header("Accept", "application/json")
@@ -147,8 +150,7 @@ async fn plex_delete(
     }
 
     let client_id = get_client_id(app)?;
-    let client = reqwest::Client::new();
-    let response = client
+    let response = PLEX_CLIENT
         .delete(url)
         .timeout(std::time::Duration::from_secs(30))
         .header("X-Plex-Client-Identifier", client_id)
@@ -192,8 +194,7 @@ async fn plex_post_subtitle(
 
     let client_id = get_client_id(app)?;
     let data = std::fs::read(file_path).map_err(|e| format!("Failed to read file: {e}"))?;
-    let client = reqwest::Client::new();
-    let response = client
+    let response = PLEX_CLIENT
         .post(url)
         .header("Accept", "text/plain, */*")
         .header("X-Plex-Client-Identifier", client_id)
@@ -895,7 +896,7 @@ async fn plex_select_subtitle(
         return Err("Invalid part or stream ID".into());
     }
     let url = format!("{}/library/parts/{}", normalize_plex_url(server_url)?, part);
-    let response = reqwest::Client::new()
+    let response = PLEX_CLIENT
         .put(url)
         // Each part is matched independently: never propagate an ID to a different part.
         .query(&[("subtitleStreamID", stream), ("allParts", "0")])
