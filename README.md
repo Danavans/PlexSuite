@@ -130,6 +130,21 @@ Plexmatch Generator turns what can otherwise be a repetitive manual mapping proc
 
 A TMDb API key is only required for **Plexmatch Generator**.
 
+### Plex token
+
+PlexSuite needs a Plex authentication token to access your server.
+
+The easiest way to find it:
+
+1. Sign in to the Plex Web App.
+2. Open any item from your library.
+3. Use **Get Info → View XML**.
+4. In the browser URL, copy the value after `X-Plex-Token=`.
+
+[Official Plex guide: Finding an authentication token / X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
+
+> Keep your Plex token private. Anyone with access to it may be able to access your Plex account/server.
+
 ### TMDb API key
 
 Plexmatch Generator requires a TMDb API key.
@@ -142,6 +157,8 @@ Plexmatch Generator requires a TMDb API key.
 Use the **API Key**, not the **API Read Access Token**.
 
 [Get your TMDb API key](https://www.themoviedb.org/settings/api)
+
+Once connected, choose a tool from the sidebar and follow the numbered workflow shown in the application.
 
 ## Portable by design
 
