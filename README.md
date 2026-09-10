@@ -130,7 +130,18 @@ Plexmatch Generator turns what can otherwise be a repetitive manual mapping proc
 
 A TMDb API key is only required for **Plexmatch Generator**.
 
-Once connected, choose a tool from the sidebar and follow the numbered workflow shown in the application.
+### TMDb API key
+
+Plexmatch Generator requires a TMDb API key.
+
+1. Sign in to your TMDb account.
+2. Open **Settings → API**.
+3. Create or copy your **API Key**.
+4. Paste it into PlexSuite under **Settings**.
+
+Use the **API Key**, not the **API Read Access Token**.
+
+[Get your TMDb API key](https://www.themoviedb.org/settings/api)
 
 ## Portable by design
 
