@@ -565,8 +565,14 @@ pub async fn preview_trash(
                 ));
             }
         }
+        let preview_title = match (item.parent_index, item.index) {
+            (Some(season), Some(episode)) => {
+                format!("S{:02}E{:02} - {}", season, episode, item.title)
+            }
+            _ => item.title.clone(),
+        };
         if item.is_trashed {
-            titles.push(item.title);
+            titles.push(preview_title);
             count += 1;
             continue;
         }
@@ -576,7 +582,7 @@ pub async fn preview_trash(
             missing_part_ids.len()
         };
         if missing_count > 0 {
-            titles.push(format!("{} (missing part x{})", item.title, missing_count));
+            titles.push(format!("{} (missing part x{})", preview_title, missing_count));
             count += missing_count;
         }
     }

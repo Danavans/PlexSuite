@@ -67,7 +67,8 @@ input::placeholder, textarea::placeholder { color: var(--placeholder); opacity: 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
 
 /* Application shell */
-.app { min-height: 100vh; padding-left: var(--rail); padding-bottom: 56px; }
+/* Together with workspace's 20px bottom padding, reserve the 40px Activity bar once. */
+.app { min-height: 100vh; padding-left: var(--rail); padding-bottom: 20px; }
 .sidebar { overflow-y: auto; position: fixed; inset: 0 auto 0 0; width: var(--rail); padding: 28px 14px 70px; display: flex; flex-direction: column; background: var(--rail-bg); border-right: 1px solid var(--stroke); }
 .brand { display: flex; align-items: center; gap: 10px; padding: 0 9px 36px; }
 .brand-mark { width: 33px; height: 33px; flex: none; color: var(--accent); }
