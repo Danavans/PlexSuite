@@ -1,56 +1,176 @@
-# PlexSuite v1.2.0
+<div align="center">
 
-PlexSuite is a portable desktop toolkit for maintaining Plex TV libraries. It brings four focused tools together in one app, with no installer required.
+<img src="static/app-icon.svg" width="96" alt="PlexSuite logo">
+
+# PlexSuite
+
+**A portable desktop toolkit for Plex TV libraries.**
+
+Fine-grained trash cleanup, subtitle management, subtitle uploads, and `.plexmatch` generation — in one lightweight desktop app.
+
+[**Download latest release**](https://github.com/Danavans/PlexSuite/releases/latest)
+
+</div>
+
+---
+
+<p align="center">
+  <img src="docs/screenshots/trash-selector.png" alt="PlexSuite Trash Selector" width="900">
+</p>
+
+## What is PlexSuite?
+
+PlexSuite is a small desktop toolkit built around everyday Plex library tasks that can otherwise be too broad, repetitive, or awkward to manage.
+
+It does not replace Plex. Instead, it adds a few focused tools for situations where you need more control over a particular show, season, subtitle set, or file mapping.
+
+PlexSuite is portable on Windows: download the executable, launch it, connect to your Plex server, and use the tool you need. No installer is required.
 
 ## Tools
 
 ### Trash Selector
 
-Preview trashed or missing media entries for a selected TV show or season, then purge only the items you intend to remove.
+Plex's **Empty Trash** action works at the library level, but sometimes you only want to remove stale entries from one particular show or season.
 
-### Sub Uploader
+For example, some missing media may be temporary and should remain in Plex until the files are restored, while other entries may belong to old media versions that have already been replaced and can safely be removed.
 
-Match local subtitle files to Plex episodes, review or adjust the mapping, and upload the selected subtitles in bulk.
+Trash Selector lets you handle those cases separately instead of emptying the trash for the entire library.
+
+**Usage**
+
+1. Select a Plex TV library.
+2. Choose a show and, optionally, a season.
+3. Run a **Dry Run**.
+4. Review the affected episodes, displayed as `S01E01 - Episode Title`.
+5. Purge the entries once the preview matches what you expect.
+
+---
 
 ### Sub Selector
 
-Scan subtitle variants, set a preferred variant as the default, and safely remove the external subtitle categories you select.
+Plex libraries can contain several subtitle variants for the same language — for example different regions, regular versus SDH subtitles, Forced tracks, or multiple combinations of them.
+
+Sub Selector lets you inspect exactly what is available and choose the variant you want across an entire show or season, rather than correcting episodes one by one.
+
+It can also clean up external subtitles that are no longer needed, including subtitles previously uploaded to Plex or sidecar subtitle files.
+
+**Usage**
+
+1. Select a library, show, and season — or scan all seasons.
+2. Click **Scan Subtitles**.
+3. Choose the exact language, region/script, Forced, and SDH variant you want.
+4. Use **Set as Default** to select matching tracks for the Plex user associated with your token.
+5. Use **Subtitle Cleanup** when you want to remove selected external subtitle categories.
+
+Embedded subtitles are part of the media file itself and cannot be removed by this cleanup.
+
+---
+
+### Sub Uploader
+
+Sometimes subtitle files cannot simply be placed next to the video files.
+
+This is particularly useful with read-only media storage, remote mounts, WebDAV libraries, or other setups where the media directory itself cannot easily be modified.
+
+Sub Uploader lets you send subtitle files directly to Plex without requiring them to live alongside the video files.
+
+**Usage**
+
+1. Select the matching Plex library, show, and season.
+2. Choose a local folder containing subtitle files.
+3. Preview the automatic episode matching.
+4. Adjust the mapping manually if necessary.
+5. Upload the matched subtitles to Plex in bulk.
+
+---
 
 ### Plexmatch Generator
 
-Match TMDb episodes to local video files, review the mapping, and save a `.plexmatch` file.
+A `.plexmatch` file tells Plex how local files should map to a series or episode structure when filenames alone do not provide the correct season and episode numbering.
 
-## First setup
+This can be especially useful with anime, alternative release structures, or read-only libraries where renaming the actual media files is not practical.
 
-1. Download the portable executable and launch PlexSuite.
-2. Open **Settings** from the Plex Toolkit sidebar.
-3. Enter your Plex server URL and Plex token.
-4. Add a TMDb API key to use Plexmatch Generator.
+Plexmatch Generator turns what can otherwise be a repetitive manual mapping process into a quick visual workflow.
 
-## Basic workflow
+**Usage**
 
-Choose a tool from the sidebar and follow its numbered guidance. Review every dry run, match, or cleanup selection before confirming it. The persistent Activity bar provides status updates and a shortcut to the session logs.
+1. Search for the series using TMDb.
+2. Load your local video files.
+3. Select the corresponding TMDb episodes.
+4. Review or reorder the mapping.
+5. Adjust path preferences if needed.
+6. Save the generated `.plexmatch` file.
 
-## Portability and privacy
+## More screenshots
 
-PlexSuite stores its settings next to the executable in `settings.json`. This file can contain your Plex token and TMDb API key, so keep it private and do not share it. Logs are session-only and can be exported from Settings when needed.
+<table>
+  <tr>
+    <td width="33%" align="center">
+      <strong>Sub Uploader</strong><br><br>
+      <img src="docs/screenshots/sub-uploader.png" alt="Sub Uploader">
+    </td>
+    <td width="33%" align="center">
+      <strong>Sub Selector</strong><br><br>
+      <img src="docs/screenshots/sub-selector.png" alt="Sub Selector">
+    </td>
+    <td width="33%" align="center">
+      <strong>Plexmatch Generator</strong><br><br>
+      <img src="docs/screenshots/plexmatch-generator.png" alt="Plexmatch Generator">
+    </td>
+  </tr>
+</table>
 
-## Platform status
+## Getting Started
 
-- Windows: tested and published as a portable executable.
-- Linux: supported by the Tauri-based codebase, but not currently tested or published.
-- macOS: not tested or published.
+1. Download the latest Windows executable from [**Releases**](https://github.com/Danavans/PlexSuite/releases/latest).
+2. Launch PlexSuite.
+3. Open **Settings** from the sidebar.
+4. Enter your Plex server URL and Plex token.
+5. Click **Save and Connect**.
+
+A TMDb API key is only required for **Plexmatch Generator**.
+
+Once connected, choose a tool from the sidebar and follow the numbered workflow shown in the application.
+
+## Portable by design
+
+PlexSuite does not require an installer.
+
+Its configuration is stored in a `settings.json` file next to the executable, so the application and its settings can remain together wherever you choose to keep them.
+
+> **Important**
+>
+> `settings.json` can contain your Plex token and TMDb API key. Keep this file private and never share it.
+
+Session logs are available from Settings and can be exported manually when troubleshooting.
 
 ## Safety
 
-- Review previews before purging trash or changing subtitles.
-- Subtitle cleanup removes only the external categories you explicitly select; embedded tracks are protected.
-- Keep `settings.json` private.
+Actions that can modify Plex data are designed around explicit previews and confirmations.
 
-## Tech stack
+- Review **Dry Run** results before purging trash.
+- Review subtitle selections before applying or removing tracks.
+- Subtitle Cleanup only targets the external categories you explicitly select.
+- Keep your Plex token and `settings.json` private.
 
-Tauri 2, Rust, SvelteKit, Svelte 5, and Vite.
+## Platform Support
+
+| Platform | Status |
+| --- | --- |
+| Windows | ✅ Tested and published |
+| Linux | ⚠️ Tauri-compatible codebase, currently untested |
+| macOS | ❌ Not currently tested or published |
+
+## Tech Stack
+
+Built with **Tauri 2**, **Rust**, **SvelteKit**, **Svelte 5**, and **Vite**.
 
 ## License
 
-MIT
+PlexSuite is released under the **MIT License**.
+
+## Disclaimer
+
+PlexSuite is an independent third-party project and is not affiliated with, endorsed by, or associated with Plex, Inc.
+
+Plex is a trademark of Plex, Inc.
