@@ -149,13 +149,13 @@ h1 { font-size: clamp(24px, 2.6vw, 32px); line-height: 1.2; font-weight: 600; le
 .log-entry.error { color: var(--danger); }
 .log-entry.success { color: var(--success); }
 .logs-panel .debug { max-height: 540px; }
-/* In the resting desktop Settings view, fill the workspace above Activity and keep only the log internally scrollable. */
+/* Keep Session activity at the viewport-filling empty-state size; only its log body may scroll. */
 @media (min-width: 851px) {
-  .workspace:has(.settings-grid):not(:has(.server-editor)) { min-height: calc(100dvh - 40px); display: flex; flex-direction: column; }
-  .workspace:has(.settings-grid):not(:has(.server-editor)) .tool-content { flex: 1; min-height: 0; display: flex; }
-  .workspace:has(.settings-grid):not(:has(.server-editor)) .settings-grid { flex: 1; min-height: 0; }
-  .workspace:has(.settings-grid):not(:has(.server-editor)) .logs-panel { height: 100%; }
-  .workspace:has(.settings-grid):not(:has(.server-editor)) .logs-panel .debug { flex: 1; min-height: 0; max-height: none; }
+  .workspace:has(.settings-grid) { height: calc(100dvh - 40px); display: grid; grid-template-rows: auto minmax(0, 1fr); }
+  .workspace:has(.settings-grid) .tool-content { min-height: 0; }
+  .workspace:has(.settings-grid) .settings-grid { height: 100%; min-height: 0; }
+  .workspace:has(.settings-grid) .logs-panel { align-self: start; height: 100%; }
+  .workspace:has(.settings-grid) .logs-panel .debug { flex: 1; min-height: 0; max-height: none; }
 }
 .list, .select-list { display: grid; gap: 6px; overflow: auto; min-height: 0; }
 .list { flex: 1; align-content: start; }
