@@ -1,6 +1,6 @@
 <script>
   import EmptyState from "./EmptyState.svelte";
-  import { invoke } from "@tauri-apps/api/core";
+  import { invokePlex as invoke } from "../appState.svelte.js";
   import { open } from "@tauri-apps/plugin-dialog";
   import { appState } from "../appState.svelte.js";
 
@@ -134,6 +134,7 @@
     
     subsUploadConfirmOpen = false;
     subsUploadBusy = true;
+    appState.isBusy = true;
     appState.setStatus("info", "Uploading subtitles...");
     
     let result = null;
@@ -161,6 +162,7 @@
       appState.setStatus("error", `Upload failed: ${error}`);
     } finally {
       subsUploadBusy = false;
+      appState.isBusy = false;
     }
     
     if (result) {

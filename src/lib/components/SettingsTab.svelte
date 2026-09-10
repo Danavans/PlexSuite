@@ -1,8 +1,63 @@
 <script>
+  import { tick } from "svelte";
   import EmptyState from "./EmptyState.svelte";
   import { appState } from "../appState.svelte.js";
   import { save } from "@tauri-apps/plugin-dialog";
   import { invoke } from "@tauri-apps/api/core";
+
+  let tmdbDraft = $state(appState.tmdbKey);
+  let tmdbFeedback = $state("");
+  let tmdbBusy = $state(false);
+  let editing = $state(false);
+  let deleting = $state(false);
+  let editorBusy = $state(false);
+  let feedback = $state("");
+  let showToken = $state(false);
+  let draft = $state({ id: "", name: "", url: "", token: "" });
+
+  /** @param {{id: string, name: string, url: string, token: string} | null} [profile] */
+  async function edit(profile = null) {
+    draft = profile ? { ...profile } : { id: crypto.randomUUID(), name: "", url: "", token: "" };
+    editing = true; deleting = false; feedback = ""; showToken = false;
+    await tick(); document.getElementById("server-name")?.focus();
+  }
+  /** @param {boolean} requireName */
+  function profileValues(requireName) {
+    if ((requireName && !draft.name.trim()) || !draft.url.trim() || !draft.token.trim()) throw new Error("Name, URL, and token are required.");
+    let url;
+    try { url = new URL(draft.url.includes("://") ? draft.url.trim() : `http://${draft.url.trim()}`); }
+    catch { throw new Error("Enter a valid Plex URL."); }
+    if (!["http:", "https:"].includes(url.protocol) || !url.hostname || url.username || url.password || url.search || url.hash) {
+      throw new Error("Use an HTTP(S) Plex URL without credentials, query parameters, or fragments.");
+    }
+    return { ...draft, name: draft.name.trim(), url: url.toString().replace(/\/+$/, ""), token: draft.token.trim() };
+  }
+  /** @param {"save" | "test" | "delete"} action */
+  async function profileAction(action) {
+    if (editorBusy || appState.switchBlocked) return;
+    editorBusy = true; feedback = "";
+    try {
+      if (action === "delete") {
+        await appState.deleteProfile(draft.id); editing = false;
+        appState.setStatus("success", "Plex server profile deleted.");
+      } else {
+        const profile = profileValues(action === "save");
+        if (action === "test") { await appState.testProfile(profile); feedback = "Connection successful."; }
+        else { await appState.saveProfile(profile); draft = profile; feedback = "Server saved. Use Test Connection to check availability."; }
+      }
+    } catch (error) { feedback = String(error); }
+    finally { editorBusy = false; deleting = false; }
+  }
+  /** @param {boolean} test */
+  async function tmdbAction(test) {
+    if (tmdbBusy) return;
+    tmdbBusy = true; tmdbFeedback = "";
+    try {
+      if (test) { await invoke("test_tmdb_key", { apiKey: tmdbDraft }); tmdbFeedback = "TMDb API key is valid."; }
+      else { await appState.saveTmdbKey(tmdbDraft); tmdbFeedback = "TMDb API key saved."; }
+    } catch (error) { tmdbFeedback = String(error).split(tmdbDraft || "\0").join("[REDACTED]"); }
+    finally { tmdbBusy = false; }
+  }
 
   function exportableLogs() {
     return [...appState.appLogs].reverse().map((entry) =>
@@ -34,49 +89,52 @@
 </script>
 
 <section class="grid settings-grid">
-  <div class="panel settings-panel lift-1">
-    <h2 class="section-title">Connections</h2>
-    <p class="kicker">
-      Save once. The app reconnects automatically on launch.
-    </p>
-    {#if appState.connectionMessage}<p class="connection-feedback" role="status">{appState.connectionMessage}</p>{/if}
-    <div class="field">
-      <label for="plex-url">Plex URL</label>
-      <input
-        id="plex-url"
-        placeholder="http://192.168.1.100:32400"
-        bind:value={appState.serverUrl}
-      />
+  <div class="settings-connections">
+    <div class="panel settings-panel lift-1" id="plex-servers">
+      <h2 class="section-title">Plex Servers</h2>
+      <p class="kicker">Save profiles here. Select the active server from the sidebar.</p>
+      <div class="server-list">
+        {#each appState.servers as server (server.id)}
+          <div class="server-row">
+            <div><strong>{server.name}</strong><small>{server.id === appState.activeServerId ? "Active · " : ""}{appState.serverStates[server.id] ?? "Unknown"}</small></div>
+            <button data-variant="ghost" onclick={() => edit(server)} disabled={editorBusy || appState.switchBlocked}>Edit<span class="sr-only"> {server.name}</span></button>
+          </div>
+        {:else}<p class="kicker">No Plex server configured. Add your first server to get started.</p>{/each}
+      </div>
+      <div class="actions"><button onclick={() => edit()} disabled={editorBusy || appState.switchBlocked}>+ Add Server</button></div>
+      {#if editing}
+        <form class="server-editor" onsubmit={(event) => { event.preventDefault(); profileAction("save"); }}>
+          <h3>{appState.servers.some(s => s.id === draft.id) ? "Edit Server" : "Add Server"}</h3>
+          <fieldset disabled={editorBusy || appState.switchBlocked}>
+            <div class="field"><label for="server-name">Server name</label><input id="server-name" bind:value={draft.name} required /></div>
+            <div class="field"><label for="plex-url">Plex server URL</label><input id="plex-url" bind:value={draft.url} placeholder="http://192.168.1.100:32400" required /></div>
+            <div class="field"><label for="plex-token">Plex token</label><input id="plex-token" type={showToken ? "text" : "password"} bind:value={draft.token} autocomplete="off" required /></div>
+            <label class="toggle"><input type="checkbox" bind:checked={showToken} />Show token</label>
+            <div class="actions">
+              <button type="button" onclick={() => profileAction("test")}>Test Connection</button>
+              <button type="submit" data-variant="primary">Save</button>
+              <button type="button" data-variant="ghost" onclick={() => editing = false}>Close</button>
+              {#if appState.servers.some(s => s.id === draft.id)}<button type="button" data-variant="danger" onclick={() => deleting = true}>Delete</button>{/if}
+            </div>
+            {#if deleting}
+              <div class="delete-profile-confirm" role="alert">
+                <p>Delete this saved server profile? {draft.id === appState.activeServerId ? "The active server will change to the first remaining profile, or no server." : "The active server will stay unchanged."}</p>
+                <div class="actions"><button type="button" data-variant="danger" onclick={() => profileAction("delete")}>Delete profile</button><button type="button" onclick={() => deleting = false}>Cancel</button></div>
+              </div>
+            {/if}
+          </fieldset>
+          {#if editorBusy}<p role="status">Working...</p>{/if}
+          {#if feedback}<p class="connection-feedback" role="status">{feedback}</p>{/if}
+        </form>
+      {/if}
     </div>
-    <div class="field">
-      <label for="plex-token">Plex Token</label>
-      <input
-        id="plex-token"
-        type={appState.showToken ? "text" : "password"}
-        placeholder="X-Plex-Token"
-        bind:value={appState.token}
-      />
-    </div>
-    <label class="toggle">
-      <input type="checkbox" bind:checked={appState.showToken} />
-      Show token
-    </label>
-    <div class="field" style="margin-top: 16px;">
-      <label for="tmdb-key">TMDb API Key</label>
-      <input
-        id="tmdb-key"
-        placeholder="Your TMDb key"
-        bind:value={appState.tmdbKey}
-      />
-    </div>
-    <div class="actions">
-      <button
-        data-variant="primary"
-        onclick={() => appState.saveSettings()}
-        disabled={appState.isBusy}
-      >
-        Save & Connect
-      </button>
+    <div class="panel settings-panel">
+      <h2 class="section-title">TMDb</h2>
+      <p class="kicker">One global API key for Plexmatch Generator. Plex connectivity is not required.</p>
+      <div class="field"><label for="tmdb-key">TMDb API Key</label><input id="tmdb-key" type="password" bind:value={tmdbDraft} disabled={tmdbBusy} autocomplete="off" /></div>
+      <div class="actions"><button onclick={() => tmdbAction(true)} disabled={tmdbBusy}>Test API Key</button><button data-variant="primary" onclick={() => tmdbAction(false)} disabled={tmdbBusy || appState.settingsWriting}>Save</button></div>
+      {#if tmdbBusy}<p role="status">Working...</p>{/if}
+      {#if tmdbFeedback}<p class="connection-feedback" role="status">{tmdbFeedback}</p>{/if}
     </div>
   </div>
   <div class="panel logs-panel lift-2">

@@ -7,6 +7,7 @@
   import SubsTab from "../lib/components/SubsTab.svelte";
   import PlexmatchTab from "../lib/components/PlexmatchTab.svelte";
   import SettingsTab from "../lib/components/SettingsTab.svelte";
+  import ServerSelector from "../lib/components/ServerSelector.svelte";
   import ToolIcon from "../lib/components/ToolIcon.svelte";
 
   let appVersion = $state("");
@@ -27,6 +28,12 @@
     appState.activeTab = id;
     window.scrollTo({ top: 0, behavior: "instant" });
   }
+
+  $effect(() => {
+    if (["trash", "subs", "subselector"].includes(appState.activeTab) && appState.isConnected && !appState.librariesLoaded && !appState.isBusy) {
+      appState.ensureLibraries();
+    }
+  });
 
   const current = $derived(tools.find(tool => tool.id === appState.activeTab) || tools[0]);
 </script>
@@ -53,10 +60,7 @@
           <ToolIcon name="settings" /><span><strong>Settings</strong><small>Connections & activity</small></span>
         </button>
       </nav>
-      <div class="connection-card">
-        <span class={`status-dot ${appState.isConnected ? "ok" : "down"}`}></span>
-        <div><strong>{appState.isConnected ? "Plex connected" : "Plex disconnected"}</strong><small>{appState.isConnected ? "Server available" : "Connect in Settings"}</small></div>
-      </div>
+      <ServerSelector manage={() => navigate("settings")} />
       <div class="sidebar-meta"><span>PLEXSUITE</span><span>{appVersion ? `v${appVersion}` : "DESKTOP"}</span></div>
     </div>
   </aside>
@@ -73,11 +77,13 @@
       <div class="connection-notice"><span><strong>Connect your services.</strong> {current.id === "plexmatch" ? "Add your TMDb API key in Settings to search for series." : "Connect your Plex server in Settings to load your libraries."}</span><button data-variant="ghost" onclick={() => navigate("settings")}>Open Settings <span aria-hidden="true">↗</span></button></div>
     {/if}
     <div class="tool-content">
+      {#key appState.activeTab === "plexmatch" || appState.activeTab === "settings" ? appState.activeTab : appState.contextVersion}
       {#if appState.activeTab === "trash"}<TrashTab />
       {:else if appState.activeTab === "subselector"}<SubSelectorTab />
       {:else if appState.activeTab === "subs"}<SubsTab />
       {:else if appState.activeTab === "plexmatch"}<PlexmatchTab />
       {:else if appState.activeTab === "settings"}<SettingsTab />{/if}
+      {/key}
     </div>
   </main>
 </div>

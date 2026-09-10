@@ -71,7 +71,7 @@ pub async fn search_series(api_key: &str, query: &str) -> Result<Vec<TmdbSeries>
         .get(url)
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.without_url().to_string())?;
     if !response.status().is_success() {
         return Err(format!("TMDb responded with status {}", response.status()));
     }
@@ -103,7 +103,7 @@ pub async fn list_episodes(api_key: &str, series_id: i64) -> Result<Vec<TmdbEpis
         .get(show_url)
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.without_url().to_string())?;
     if !show_resp.status().is_success() {
         return Err(format!("TMDb responded with status {}", show_resp.status()));
     }
@@ -122,7 +122,7 @@ pub async fn list_episodes(api_key: &str, series_id: i64) -> Result<Vec<TmdbEpis
             .get(season_url)
             .send()
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| e.without_url().to_string())?;
         if !season_resp.status().is_success() {
             return Err(format!(
                 "TMDb responded with status {} for season {}",
@@ -143,4 +143,22 @@ pub async fn list_episodes(api_key: &str, series_id: i64) -> Result<Vec<TmdbEpis
         }
     }
     Ok(all)
+}
+
+/// One authenticated request, independent of Plex and saved settings.
+pub async fn test_api_key(api_key: &str) -> Result<(), String> {
+    if api_key.trim().is_empty() { return Err("TMDb API key is missing.".into()); }
+    let response = reqwest::Client::new()
+        .get(base_url()?.join("authentication").map_err(|e| e.to_string())?)
+        .query(&[("api_key", api_key.trim())])
+        .timeout(std::time::Duration::from_secs(15))
+        .send().await.map_err(|e| e.without_url().to_string())?;
+    if !response.status().is_success() {
+        return Err(format!("TMDb responded with status {}", response.status()));
+    }
+    let data: serde_json::Value = response.json().await.map_err(|e| e.without_url().to_string())?;
+    if data.get("success").and_then(|v| v.as_bool()) != Some(true) {
+        return Err("TMDb did not confirm the API key.".into());
+    }
+    Ok(())
 }

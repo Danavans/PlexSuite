@@ -101,13 +101,20 @@ async fn get_settings(app: AppHandle) -> Result<settings::SettingsView, String> 
 }
 
 #[tauri::command]
-async fn save_settings(
-    app: AppHandle,
-    plex_url: String,
-    plex_token: String,
-    tmdb_key: String,
-) -> Result<(), String> {
-    settings::save_settings(&app, plex_url, plex_token, tmdb_key)
+async fn save_plex_config(app: AppHandle, plex: settings::PlexSettings) -> Result<(), String> {
+    settings::save_plex_config(&app, plex)
+}
+#[tauri::command]
+async fn save_tmdb_key(app: AppHandle, tmdb_key: String) -> Result<(), String> {
+    settings::save_tmdb_key(&app, tmdb_key)
+}
+#[tauri::command]
+async fn test_tmdb_key(api_key: String) -> Result<(), String> {
+    tmdb::test_api_key(&api_key).await
+}
+#[tauri::command]
+async fn test_plex_connection(app: AppHandle, server_url: String, token: String) -> Result<(), String> {
+    plex::test_connection(&app, &server_url, &token).await
 }
 
 #[tauri::command]
@@ -347,7 +354,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             get_settings,
-            save_settings,
+            save_plex_config,
+            save_tmdb_key,
+            test_tmdb_key,
+            test_plex_connection,
             list_libraries,
             list_shows,
             list_seasons,

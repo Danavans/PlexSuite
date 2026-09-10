@@ -122,7 +122,7 @@ async fn plex_get_json_timed(
         return Err(format!("Plex responded with status {status}"));
     }
     let body_start = Instant::now();
-    let body = response.text().await.map_err(|e| e.to_string())?;
+    let body = response.text().await.map_err(|e| e.without_url().to_string())?;
     let body_ms = body_start.elapsed().as_millis();
     let parse_start = Instant::now();
     let value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
@@ -203,7 +203,7 @@ async fn plex_post_subtitle(
         .body(data)
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.without_url().to_string())?;
     let status = response.status();
     if !status.is_success() {
         return Err(format!("Upload failed with status {status}"));
@@ -386,6 +386,7 @@ pub async fn list_libraries(
     token: &str,
 ) -> Result<Vec<Library>, String> {
     let value = plex_get_json(app, server_url, token, "library/sections", vec![]).await?;
+    validate_library_response(&value)?;
     Ok(parse_libraries(&value))
 }
 
@@ -1105,4 +1106,18 @@ mod subtitle_metadata_tests {
             .is_empty());
         assert!(parse_subtitle_episode(&json!({}), "10", "1", "2", None).is_err());
     }
+}
+
+// Authenticated endpoint, shared transport; no profile state is retained here.
+pub async fn test_connection(app: &AppHandle, server_url: &str, token: &str) -> Result<(), String> {
+    if token.trim().is_empty() { return Err("Plex token is required.".into()); }
+    let value = plex_get_json(app, server_url, token, "library/sections", vec![]).await?;
+    validate_library_response(&value)
+}
+
+fn validate_library_response(value: &Value) -> Result<(), String> {
+    if !value.get("MediaContainer").is_some_and(|v| v.is_object()) {
+        return Err("The server did not return a Plex library response.".into());
+    }
+    Ok(())
 }

@@ -1,6 +1,6 @@
 <script>
   import EmptyState from "./EmptyState.svelte";
-  import { invoke } from "@tauri-apps/api/core";
+  import { invokePlex as invoke } from "../appState.svelte.js";
   import { appState } from "../appState.svelte.js";
 
   /**

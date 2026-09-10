@@ -1,6 +1,6 @@
 <script lang="ts">
   import EmptyState from "./EmptyState.svelte";
-  import { invoke } from "@tauri-apps/api/core";
+  import { invokePlex as invoke } from "../appState.svelte.js";
   import { appState } from "../appState.svelte.js";
   type Key = { languageTag: string; forced: boolean; hearingImpaired: boolean };
   type Variant = { key: Key; language: string; languageCode: string | null; episodeCount: number; totalEpisodes: number; selectedCount: number; missing: string[] };

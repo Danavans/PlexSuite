@@ -284,3 +284,22 @@ button[data-variant="accent"]:hover:not(:disabled) { background: var(--accent-su
 .tool-nav button:hover:not(:disabled) { background: var(--raised); border-color: var(--border-strong); }
 .tool-nav button.active-tab:hover:not(:disabled) { background: var(--accent-surface); border-color: var(--accent); }
 .activity-link:hover:not(:disabled) { background: transparent; color: var(--accent-hover); }
+
+/* Global Plex profile controls use the existing graphite surfaces. */
+.settings-connections { display: grid; gap: 20px; align-content: start; min-width: 0; }
+.server-list { max-height: 320px; overflow-y: auto; }
+.server-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--stroke); }
+.server-row > div, .server-current, .server-option > span:first-child { min-width: 0; flex: 1; }
+.server-row strong, .server-option strong { display: block; overflow-wrap: anywhere; }
+.server-row small, .server-option small { display: block; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.server-editor { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--stroke); }
+.server-editor fieldset { padding: 0; border: 0; min-width: 0; }
+.delete-profile-confirm { padding: 12px; margin-top: 14px; border: 1px solid var(--stroke); border-radius: 8px; }
+.server-trigger { width: calc(100% - 20px); text-align: left; background: transparent; border: 0; border-top: 1px solid var(--stroke); border-radius: 0; padding-inline: 0; padding-bottom: 0; white-space: normal; }
+.server-current strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.server-popover { position: fixed; inset: auto; margin: 0; padding: 12px; overflow-y: auto; background: var(--rail-bg); color: var(--ink); border: 1px solid var(--stroke); border-radius: 10px; box-shadow: 0 12px 40px #0009; }
+.server-popover .nav-caption { margin: 0 0 8px; display: block; }
+.server-option { display: flex; width: 100%; text-align: left; justify-content: space-between; gap: 12px; padding: 10px; white-space: normal; background: transparent; border: 0; }
+.server-option.selected-server { background: var(--accent-surface); }
+.manage-servers { margin-top: 8px; border-top: 1px solid var(--stroke); }
+@media (max-width: 760px) { .connection-card.server-trigger { display: flex; margin-block: 8px; padding-top: 8px; } }

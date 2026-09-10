@@ -30,20 +30,24 @@
 
 - Svelte 5 components: `TrashTab.svelte`, `SubsTab.svelte`, `SubSelectorTab.svelte`, `PlexmatchTab.svelte`, and `SettingsTab.svelte`. `src/routes/+page.svelte` is the current shell and layout controller.
 - `src/lib/appState.svelte.js` owns shared state and business coordination. Backend behavior, Tauri window behavior, persistence, confirmations, and tool workflows are preserved by the rebrand.
-- Settings stores Plex URL/token and TMDb key next to the executable. Session logs are fed by `setStatus()`, are not persisted automatically, and can be exported as plain text. Debug mode is off by default; retention is 200 logs normally and 10,000 in Debug mode.
+- Settings stores Plex profiles (`plex.servers`, each with a stable UUID, name, URL, token), `plex.active_server_id`, the global `tmdb_key`, and installation `client_id` in `settings.json` next to the executable. Legacy single-server credentials migrate automatically. Profile and TMDb saves are independent of connectivity; both have explicit test actions. Settings writes use a temporary file and atomic replacement; invalid JSON is left untouched. Session logs are fed by `setStatus()`, are not persisted automatically, and can be exported as plain text. Debug mode is off by default; retention is 200 logs normally and 10,000 in Debug mode.
 - Trash Selector performs a dry run before purge and uses themed confirmation/completion dialogs. Do not change purge or dry-run semantics.
 - Sub Uploader uses the Plex `/library/metadata/{ratingKey}/subtitles` endpoint with a raw body and title/format parameters. Keep its current matching and upload behavior.
 - Sub Selector supports exact language/region/script plus Forced and SDH variants. Set as Default changes only matching streams for the Plex user associated with the token; each media version/part is handled independently and episodes without a match remain unchanged.
 - Subtitle Cleanup has unchecked-by-default Physical Sidecar, Plex Uploaded, and Unknown External categories; Unknown External is hidden at count zero. Embedded streams are always protected. Confirmation warns by category, and removal uses Plex DELETE only after revalidating scope, identity, and category for each stream.
 - `scripts/diagnose-subtitle-metadata.ps1` is a PowerShell 7, GET-only development diagnostic for subtitle metadata classification.
+- The sidebar connectivity area is the only server selector, using a bounded dark popover. Selection persists, refreshes active connectivity, and never fails over on connection failure. Deleting the active profile selects the first remaining profile or clears the Plex context.
+- `appState` retrieves active credentials centrally. All Plex commands pass through `invokePlex`/`plexInvoke`; request tracking and counted existing busy scopes block switching and profile mutations until complete, including subtitle uploads. A context version clears shared selections and recreates the three Plex-dependent tool components on a connection change; Plexmatch uses only TMDb/local files and is preserved. No health polling is added.
 - One process-lifetime shared `reqwest::Client` handles Plex GET, DELETE, subtitle-upload POST, and subtitle-selection PUT operations. It creates no background traffic while inactive; preserve its existing request behavior and timeouts. TMDb retains its own client creation.
 
 ## Build and cleanup
 
-- Run `npm run tauri build` for a portable Windows build; the executable is `src-tauri/target/release/plex-suite.exe`.
+- Run `npm run tauri build` for a portable Windows build; the executable is `src-tauri/target/release/plex_suite.exe`.
 - Safe generated directories to remove when needed: `src-tauri/target`, `node_modules`, `.svelte-kit`, and `build`.
 
 ## Changelog
+
+- 2026-09-10: Added global multi-server Plex profiles, safe legacy migration, independent Plex/TMDb save and test controls, sidebar selection, operation locking, and context invalidation.
 
 - 2026-09-10: v1.2.0 finalization: approved PlexSuite UI/UX rebrand with persistent sidebar/tool rail, graphite/amber identity, shared icon and empty-state presentation, responsive layout improvements, Activity/status presentation, refreshed application icons, Trash Selector episode identifiers, and final scrollbar/layout polish.
 - 2026-09-09: Sub Selector added exact-variant scanning, Set as Default by version/part, and safe handling for episodes without a match.
