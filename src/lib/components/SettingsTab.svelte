@@ -90,6 +90,14 @@
 
 <section class="grid settings-grid">
   <div class="settings-connections">
+    <div class="panel settings-panel">
+      <h2 class="section-title">TMDb</h2>
+      <p class="kicker">One global API key for Plexmatch Generator. Plex connectivity is not required.</p>
+      <div class="field"><label for="tmdb-key">TMDb API Key</label><input id="tmdb-key" type="password" bind:value={tmdbDraft} disabled={tmdbBusy} autocomplete="off" /></div>
+      <div class="actions"><button onclick={() => tmdbAction(true)} disabled={tmdbBusy}>Test API Key</button><button data-variant="primary" onclick={() => tmdbAction(false)} disabled={tmdbBusy || appState.settingsWriting}>Save</button></div>
+      {#if tmdbBusy}<p role="status">Working...</p>{/if}
+      {#if tmdbFeedback}<p class="connection-feedback" role="status">{tmdbFeedback}</p>{/if}
+    </div>
     <div class="panel settings-panel lift-1" id="plex-servers">
       <h2 class="section-title">Plex Servers</h2>
       <p class="kicker">Save profiles here. Select the active server from the sidebar.</p>
@@ -127,14 +135,6 @@
           {#if feedback}<p class="connection-feedback" role="status">{feedback}</p>{/if}
         </form>
       {/if}
-    </div>
-    <div class="panel settings-panel">
-      <h2 class="section-title">TMDb</h2>
-      <p class="kicker">One global API key for Plexmatch Generator. Plex connectivity is not required.</p>
-      <div class="field"><label for="tmdb-key">TMDb API Key</label><input id="tmdb-key" type="password" bind:value={tmdbDraft} disabled={tmdbBusy} autocomplete="off" /></div>
-      <div class="actions"><button onclick={() => tmdbAction(true)} disabled={tmdbBusy}>Test API Key</button><button data-variant="primary" onclick={() => tmdbAction(false)} disabled={tmdbBusy || appState.settingsWriting}>Save</button></div>
-      {#if tmdbBusy}<p role="status">Working...</p>{/if}
-      {#if tmdbFeedback}<p class="connection-feedback" role="status">{tmdbFeedback}</p>{/if}
     </div>
   </div>
   <div class="panel logs-panel lift-2">

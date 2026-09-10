@@ -4,6 +4,7 @@
   let trigger: HTMLButtonElement;
   let menu: HTMLDivElement;
   let expanded = $state(false);
+  let dismissTriggerClick = false;
   function address(url: string) { try { return new URL(url.includes("://") ? url : `http://${url}`).origin; } catch { return "Edit URL in Settings"; } }
   function position() {
     const rect = trigger.getBoundingClientRect();
@@ -18,10 +19,19 @@
   }
   function open() { if (appState.switchBlocked) return; menu.showPopover(); position(); }
   function close() { menu?.hidePopover(); }
+  function dismissFromTriggerPointer() {
+    if (!menu.matches(":popover-open")) return;
+    close();
+    dismissTriggerClick = true;
+  }
+  function toggle() {
+    if (dismissTriggerClick) { dismissTriggerClick = false; return; }
+    menu.matches(":popover-open") ? close() : open();
+  }
   $effect(() => { if (appState.switchBlocked) close(); });
 </script>
 <svelte:window onresize={close} onscroll={close} />
-<button bind:this={trigger} class="connection-card server-trigger" onclick={open} disabled={appState.switchBlocked} aria-expanded={expanded} aria-controls="server-menu" title={appState.switchBlocked ? "Wait for the current operation" : "Select Plex server"}>
+<button bind:this={trigger} class="connection-card server-trigger" onpointerdown={dismissFromTriggerPointer} onclick={toggle} disabled={appState.switchBlocked} aria-expanded={expanded} aria-controls="server-menu" title={appState.switchBlocked ? "Wait for the current operation" : "Select Plex server"}>
   <span class={`status-dot ${appState.isConnected ? "ok" : "down"}`}></span>
   <span class="server-current"><strong>{appState.activeServer?.name ?? "No Plex server"}</strong><small>{appState.switching ? "Connecting..." : appState.connectionState === "Available" ? "Server available" : appState.connectionState === "Unavailable" ? "Server unavailable" : appState.connectionState}</small></span>
   <span aria-hidden="true">▾</span>
