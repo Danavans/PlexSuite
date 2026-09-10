@@ -21,6 +21,9 @@
   ];
   /** @param {string} id */
   function navigate(id) {
+    if (appState.activeTab === "settings" && id !== "settings") {
+      appState.connectionMessage = "";
+    }
     appState.activeTab = id;
     window.scrollTo({ top: 0, behavior: "instant" });
   }
