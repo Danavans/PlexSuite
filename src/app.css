@@ -123,7 +123,7 @@ h1 { font-size: clamp(24px, 2.6vw, 32px); line-height: 1.2; font-weight: 600; le
 .trash-library { grid-area: library; }
 .trash-preview { grid-area: preview; }
 .trash-actions { grid-area: actions; border-top-color: var(--danger-border); }
-.trash-preview .debug { flex: 1; min-height: 0; max-height: none; margin-top: 0; }
+.trash-preview .debug { flex: 1; min-height: 0; max-height: 520px; margin-top: 0; }
 .subs-grid-wide { grid-template-areas: "scope source" "preview preview"; }
 .subs-scope { grid-area: scope; }
 .subs-source { grid-area: source; }
