@@ -26,6 +26,8 @@ It does not replace Plex. Instead, it adds a few focused tools for situations wh
 
 PlexSuite is portable on Windows: download the executable, launch it, connect to your Plex server, and use the tool you need. No installer is required.
 
+Multiple Plex servers can be saved in Settings and switched globally from the sidebar. The selected server becomes the active context for Plex-related tools, without adding extra server selectors inside each workflow.
+
 ## Tools
 
 ### Trash Selector
@@ -125,10 +127,11 @@ Plexmatch Generator turns what can otherwise be a repetitive manual mapping proc
 1. Download the latest Windows executable from [**Releases**](https://github.com/Danavans/PlexSuite/releases/latest).
 2. Launch PlexSuite.
 3. Open **Settings** from the sidebar.
-4. Enter your Plex server URL and Plex token.
-5. Click **Save and Connect**.
+4. Add a Plex server with its name, server URL, and Plex token.
+5. Save the server and use **Test Connection** if you want to verify it.
+6. If you add multiple Plex servers, switch between them directly from the server selector in the sidebar.
 
-A TMDb API key is only required for **Plexmatch Generator**.
+A TMDb API key is only required for **Plexmatch Generator** and can be saved and tested independently in Settings.
 
 ### Plex token
 
@@ -166,9 +169,11 @@ PlexSuite does not require an installer.
 
 Its configuration is stored in a `settings.json` file next to the executable, so the application and its settings can remain together wherever you choose to keep them.
 
+Saved Plex server profiles, Plex tokens, and the TMDb API key are stored in this local configuration file.
+
 > **Important**
 >
-> `settings.json` can contain your Plex token and TMDb API key. Keep this file private and never share it.
+> `settings.json` can contain your Plex tokens and TMDb API key. Keep this file private and never share it.
 
 Session logs are available from Settings and can be exported manually when troubleshooting.
 
@@ -179,7 +184,8 @@ Actions that can modify Plex data are designed around explicit previews and conf
 - Review **Dry Run** results before purging trash.
 - Review subtitle selections before applying or removing tracks.
 - Subtitle Cleanup only targets the external categories you explicitly select.
-- Keep your Plex token and `settings.json` private.
+- Server switching is blocked while Plex operations are running.
+- Keep your Plex tokens and `settings.json` private.
 
 ## Platform Support
 
