@@ -149,12 +149,14 @@ h1 { font-size: clamp(24px, 2.6vw, 32px); line-height: 1.2; font-weight: 600; le
 .log-entry.error { color: var(--danger); }
 .log-entry.success { color: var(--success); }
 .logs-panel .debug { max-height: 540px; }
-/* Keep Session activity at the viewport-filling empty-state size; only its log body may scroll. */
+/* Settings columns size independently: the page may grow for server editing, while activity remains viewport-sized. */
 @media (min-width: 851px) {
-  .workspace:has(.settings-grid) { height: calc(100dvh - 40px); display: grid; grid-template-rows: auto minmax(0, 1fr); }
-  .workspace:has(.settings-grid) .tool-content { min-height: 0; }
-  .workspace:has(.settings-grid) .settings-grid { height: 100%; min-height: 0; }
-  .workspace:has(.settings-grid) .logs-panel { align-self: start; height: 100%; }
+  .workspace:has(.settings-grid) {
+    --settings-header-height: 62px;
+    --settings-activity-height: calc(100dvh - 40px - 22px - var(--settings-header-height) - 16px - 20px);
+  }
+  .workspace:has(.settings-grid) .settings-grid { align-items: start; }
+  .workspace:has(.settings-grid) .logs-panel { align-self: start; height: var(--settings-activity-height); }
   .workspace:has(.settings-grid) .logs-panel .debug { flex: 1; min-height: 0; max-height: none; }
 }
 .list, .select-list { display: grid; gap: 6px; overflow: auto; min-height: 0; }
