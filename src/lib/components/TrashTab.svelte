@@ -1,4 +1,5 @@
 <script>
+  import EmptyState from "./EmptyState.svelte";
   import { invoke } from "@tauri-apps/api/core";
   import { appState } from "../appState.svelte.js";
 
@@ -82,7 +83,7 @@
 
 <section class="grid trash-grid">
   <div class="panel trash-library lift-1">
-    <h2>Library Scope</h2>
+    <h2><span class="step-number">01</span> Library scope</h2>
     <div class="kicker" style="margin-bottom: 10px;">
       Choose a library, show, and optional season to define the purge scope.
     </div>
@@ -174,10 +175,10 @@
   </div>
 
   <div class="panel trash-preview lift-2">
-    <h2>Preview List</h2>
+    <h2><span class="step-number">02</span> Dry run preview</h2>
     <div class="debug">
       {#if preview.count === 0}
-        <p class="kicker">Run a Dry Run to see results.</p>
+        <EmptyState title="Review before you remove" description="Choose a show and run a Dry Run. Matching trash appears here; the activity bar reports the result." />
       {:else}
         <p><strong>Items ({preview.count})</strong></p>
         {#each preview.titles as title}
@@ -188,24 +189,24 @@
   </div>
 
   <div class="panel trash-actions lift-3">
-    <h2>Purge Controls</h2>
+    <h2><span class="step-number">03</span> Purge controls</h2>
     <div class="kicker">
       Run a dry run to review matches, then purge trash for the selected show or season.
     </div>
     <div class="actions" style="margin-top: 18px;">
       <button
         data-variant="primary"
-        onclick={openPurgeConfirm}
-        disabled={!appState.selectedShow || appState.isBusy}
-      >
-        Purge Trash
-      </button>
-      <button
-        data-variant="ghost"
         onclick={previewTrash}
         disabled={!appState.selectedShow || appState.isBusy}
       >
         Dry Run
+      </button>
+      <button
+        data-variant="danger"
+        onclick={openPurgeConfirm}
+        disabled={!appState.selectedShow || appState.isBusy}
+      >
+        Purge Trash
       </button>
       <button
         data-variant="ghost"
@@ -239,7 +240,7 @@
         <button data-variant="ghost" onclick={() => (confirmOpen = false)}>
           Cancel
         </button>
-        <button data-variant="primary" onclick={confirmPurge} disabled={appState.isBusy}>
+        <button data-variant="danger" onclick={confirmPurge} disabled={appState.isBusy}>
           Purge Trash
         </button>
       </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import EmptyState from "./EmptyState.svelte";
   import { invoke } from "@tauri-apps/api/core";
   import { appState } from "../appState.svelte.js";
   type Key = { languageTag: string; forced: boolean; hearingImpaired: boolean };
@@ -83,7 +84,7 @@
 <section class="grid sub-selector-grid">
   <div class="sub-selector-stack">
     <div class="panel lift-1">
-      <h2>Library &amp; Target</h2>
+      <h2><span class="step-number">01</span> Library &amp; target</h2>
       <div class="field"><label for="selector-library">TV Library</label><select id="selector-library" bind:value={appState.selectedLibraryId} onchange={changeLibrary} disabled={!appState.isConnected}>
         <option value="">Select a library</option>{#each appState.libraries as library}<option value={library.id}>{library.title}</option>{/each}
       </select></div>
@@ -100,9 +101,9 @@
         {#if summary}<p class="sub-selector-scan-summary" role="status" title={summary}>{summary}</p>{/if}
       </div>
     </div>
-    <div class="panel lift-2">
+    <div class="panel cleanup-panel lift-2">
       <div class="sub-cleanup-header">
-        <h2>Subtitle Cleanup</h2>
+        <h2>Subtitle cleanup</h2>
         <p>Remove external subtitles in scope.</p>
       </div>
       {#if valid}
@@ -119,14 +120,14 @@
           <div class="sub-cleanup-category sub-cleanup-embedded"><input type="checkbox" checked disabled aria-label="Embedded subtitles are always preserved" /><span>Embedded</span><strong>{scan?.counts.Embedded || 0}</strong></div>
         </div>
       {/if}
-      <div class="actions"><button data-variant="primary" onclick={() => confirmOpen = true} disabled={!valid || !cleanupKeys.length || appState.isBusy}>Remove Selected</button></div>
+      <div class="actions"><button data-variant="danger" onclick={() => confirmOpen = true} disabled={!valid || !cleanupKeys.length || appState.isBusy}>Remove Selected</button></div><p class="protection-note">Embedded tracks are always protected. Removal requires confirmation.</p>
     </div>
   </div>
   <div class="sub-selector-results-shell">
     <div class="panel sub-selector-results lift-2">
-      <h2>Available Subtitles</h2>
-      {#if !valid}<p class="kicker">Scan subtitles to see available variants.</p>
-      {:else if !groups.length}<p class="kicker">No subtitle tracks found in the scanned episodes.</p>
+      <h2><span class="step-number">02</span> Available subtitles</h2>
+      {#if !valid}<EmptyState title="Find your preferred variant" description="Scan a show or season to explore exact language, region, script, Forced and SDH variants." />
+      {:else if !groups.length}<EmptyState title="No subtitle tracks found" description="The scan found no tracks in these episodes. Choose another scope to scan again." />
       {:else}<div class="list sub-selector-list">{#each groups as group}<details class="sub-selector-language"><summary>{group.name}</summary>
         {#each group.variants as variant}<div class="sub-selector-variant">
           <label class="list-item"><input type="radio" name="subtitle-variant" bind:group={selected} value={JSON.stringify(variant.key)} disabled={appState.isBusy} /><span>{label(variant)}<br /><small class="kicker">{variant.episodeCount} / {variant.totalEpisodes} episodes · Currently selected: {variant.selectedCount}<br />{variant.key.languageTag}</small></span></label>
@@ -144,6 +145,6 @@
     <p>Scope: <strong>{appState.selectedShow?.title} — {appState.selectedSeason?.title || "All Seasons"}</strong></p>
     {#each cleanupCategories as category}<p class:sub-cleanup-warning={category === "Unknown External"}><strong>{category} ({scan!.counts[category]}):</strong> {cleanupWarnings[category]}</p>{/each}
     <p>Embedded tracks are always preserved. Each stream is checked again before removal; streams outside the selected categories or scope are skipped.</p>
-    <div class="actions"><button data-variant="ghost" onclick={() => confirmOpen = false}>Cancel</button><button data-variant="primary" onclick={() => run("remove")}>Remove {cleanupKeys.length}</button></div>
+    <div class="actions"><button data-variant="ghost" onclick={() => confirmOpen = false}>Cancel</button><button data-variant="danger" onclick={() => run("remove")}>Remove {cleanupKeys.length}</button></div>
   </dialog>
 {/if}

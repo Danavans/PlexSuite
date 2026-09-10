@@ -1,4 +1,5 @@
 <script>
+  import EmptyState from "./EmptyState.svelte";
   import { appState } from "../appState.svelte.js";
   import { save } from "@tauri-apps/plugin-dialog";
   import { invoke } from "@tauri-apps/api/core";
@@ -32,12 +33,13 @@
   }
 </script>
 
-<section class="grid module-grid">
+<section class="grid settings-grid">
   <div class="panel settings-panel lift-1">
-    <h2 class="section-title">Credentials</h2>
+    <h2 class="section-title">Connections</h2>
     <p class="kicker">
       Save once. The app reconnects automatically on launch.
     </p>
+    {#if appState.connectionMessage}<p class="connection-feedback" role="status">{appState.connectionMessage}</p>{/if}
     <div class="field">
       <label for="plex-url">Plex URL</label>
       <input
@@ -77,8 +79,8 @@
       </button>
     </div>
   </div>
-  <div class="panel lift-2">
-    <h2>Logs</h2>
+  <div class="panel logs-panel lift-2">
+    <h2>Session activity</h2><p class="kicker">Logs stay in this session. Export a copy to keep them. Debug mode includes detailed scan diagnostics.</p>
     <div class="logs-controls">
       <div class="actions">
         <button data-variant="ghost" onclick={exportLogs}>Export logs</button>
@@ -98,10 +100,10 @@
     </div>
     <div class="debug">
       {#if appState.appLogs.length === 0}
-        <p class="kicker">No logs yet.</p>
+        <EmptyState title="A clear view of your activity" description="Connection messages and tool results appear here as you work." />
       {:else}
         {#each appState.appLogs as entry}
-          <p>
+          <p class={`log-entry ${entry.type}`}>
             [{entry.timestamp}] [{entry.tab}] {entry.type.toUpperCase()}: {entry.message}
           </p>
         {/each}

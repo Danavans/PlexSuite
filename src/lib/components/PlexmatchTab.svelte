@@ -1,4 +1,5 @@
 <script>
+  import EmptyState from "./EmptyState.svelte";
   import { invoke } from "@tauri-apps/api/core";
   import { open, save } from "@tauri-apps/plugin-dialog";
   import { appState } from "../appState.svelte.js";
@@ -542,7 +543,7 @@
 
 <section class="grid plexmatch-row plexmatch-lookup">
   <div class="panel lift-1">
-    <h2>TMDb Lookup</h2>
+    <h2><span class="step-number">01</span> Find a series</h2>
     <div class="lookup-row">
       <div class="field">
         <label for="tmdb-search">Series search</label>
@@ -592,7 +593,7 @@
 
 <section class="grid plexmatch-row plexmatch-duo">
   <div class="panel lift-2">
-    <h2>TMDb Episodes</h2>
+    <h2>TMDb episodes</h2>
     <div class="actions">
       <button data-variant="ghost" onclick={selectAllEpisodes}>
         Select all
@@ -624,7 +625,7 @@
   </div>
 
   <div class="panel lift-3">
-    <h2>Video Files</h2>
+    <h2>Local video files</h2>
     <div class="actions">
       <button data-variant="ghost" onclick={pickVideoFiles}>
         Add files
@@ -642,7 +643,7 @@
         onpointerleave={endPointerDrag}
       >
         {#if videoFiles.length === 0}
-          <div class="kicker">No files added yet.</div>
+          <EmptyState title="Bring your files" description="Add local videos, then drag them into episode order. Click a filename to expand it." />
         {:else}
           {#each videoFiles as file, index (file.path)}
             <div
@@ -664,7 +665,7 @@
 
 <section class="grid plexmatch-row plexmatch-map">
   <div class="panel lift-2">
-    <h2>Mapping</h2>
+    <h2><span class="step-number">02</span> Arrange your mapping</h2><p class="kicker">Selected episodes pair with files in order. Drag either column to adjust the mapping.</p>
     <div class="actions">
       <button data-variant="mint" onclick={mapSelected}>
         Map selected
@@ -692,7 +693,7 @@
         <span></span>
       </div>
       {#if mappings.length === 0}
-        <p class="kicker">No mappings yet.</p>
+        <EmptyState title="Connect episodes to files" description="Select TMDb episodes, add your videos, then choose Map selected." />
       {:else}
         {#each mappings as map, index}
           <div
@@ -746,7 +747,7 @@
 
 <section class="grid plexmatch-row plexmatch-preferences">
   <div class="panel lift-3">
-    <h2>Mapping Preferences</h2>
+    <h2><span class="step-number">03</span> Preview & export</h2>
     <div class="preferences-grid">
         <div>
           <div class="field">

@@ -1,4 +1,5 @@
 <script>
+  import EmptyState from "./EmptyState.svelte";
   import { invoke } from "@tauri-apps/api/core";
   import { open } from "@tauri-apps/plugin-dialog";
   import { appState } from "../appState.svelte.js";
@@ -264,7 +265,7 @@
 
 <section class="grid subs-grid-wide" class:app-blocked={subsUploadBusy} aria-busy={subsUploadBusy} inert={subsUploadBusy}>
   <div class="panel subs-scope lift-1">
-    <h2>Library & Target</h2>
+    <h2><span class="step-number">01</span> Library & target</h2>
     <div class="field">
       <label for="library">TV Library</label>
       <select
@@ -338,7 +339,7 @@
   </div>
 
   <div class="panel subs-source lift-2">
-    <h2>Subtitle Source</h2>
+    <h2><span class="step-number">02</span> Subtitle source</h2>
     <div class="actions">
       <button data-variant="ghost" onclick={pickSubsFolder}>
         Choose folder
@@ -360,13 +361,6 @@
       >
         Preview Mapping
       </button>
-      <button
-        data-variant="primary"
-        onclick={() => (subsUploadPreConfirmOpen = true)}
-        disabled={mappingRows.filter(r => r.episode && r.file).length === 0 || subsUploadBusy}
-      >
-        Upload Subtitles
-      </button>
     </div>
     <p class="kicker">
       Drag files to reorder mapping. Click a file to view full name.
@@ -374,7 +368,7 @@
   </div>
 
   <div class="panel subs-preview lift-3">
-    <h2>Mapping Preview</h2>
+    <h2><span class="step-number">03</span> Review mapping</h2>
     <div 
       class="table mapping-table"
       onpointermove={moveDrag}
@@ -387,7 +381,7 @@
         <span aria-hidden="true"></span>
       </div>
       {#if mappingRows.length === 0}
-        <p class="kicker">No preview yet.</p>
+        <EmptyState title="Every subtitle, in its place" description="Choose a target and subtitle folder, then Preview Mapping. Drag files between rows to adjust matches before uploading." />
       {:else}
         {#each mappingRows as row, index}
           <div 
@@ -436,6 +430,15 @@
         {/each}
       {/if}
     </div>
+    <div class="review-actions"><p class="kicker">Review episode matches before uploading to Plex.</p><div class="actions">
+      <button
+        data-variant="primary"
+        onclick={() => (subsUploadPreConfirmOpen = true)}
+        disabled={mappingRows.filter(r => r.episode && r.file).length === 0 || subsUploadBusy}
+      >
+        Upload Subtitles
+      </button>
+    </div></div>
   </div>
 </section>
 
@@ -505,11 +508,11 @@
 
 <style>
   .unassigned-text {
-    opacity: 0.5;
+    color: var(--muted);
     font-style: italic;
   }
   .empty-text {
-    opacity: 0.3;
+    color: var(--muted);
   }
   .subs-file {
     cursor: grab;
@@ -546,11 +549,11 @@
   }
   /* Ensure column alignment */
   .subs-row {
-    grid-template-columns: 1fr 1fr 20px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 20px;
     gap: 4px;
   }
   .subs-header {
-    grid-template-columns: 1fr 1fr 20px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 20px;
     padding: 0 12px;
   }
 </style>
