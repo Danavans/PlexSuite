@@ -17,7 +17,7 @@
     { id: "subs", title: "Sub Uploader", hint: "Match & upload", description: "Bring your subtitle files into Plex, with every episode matched your way.", steps: ["Choose target", "Add subtitles", "Review & upload"] },
     { id: "subselector", title: "Sub Selector", hint: "Scan & select", description: "Find exact subtitle variants, set your defaults, and manage external tracks.", steps: ["Scan scope", "Choose variant", "Apply or clean up"] },
     { id: "plexmatch", title: "Plexmatch Generator", hint: "Map & export", description: "Connect local video files to TMDb episodes and create your .plexmatch file.", steps: ["Find series", "Arrange & map", "Review & export"] },
-    { id: "settings", title: "Settings", hint: "Connections & activity", description: "Manage your connections and inspect activity across your workspace.", steps: [] }
+    { id: "settings", title: "Settings", hint: "Connections & activity", description: "Manage your connections and inspect activity across PlexSuite.", steps: [] }
   ];
   /** @param {string} id */
   function navigate(id) {
@@ -28,15 +28,15 @@
   const current = $derived(tools.find(tool => tool.id === appState.activeTab) || tools[0]);
 </script>
 
-<svelte:head><title>PlexSuite — Media workspace</title></svelte:head>
+<svelte:head><title>PlexSuite — Plex toolkit</title></svelte:head>
 
 <div class="app" class:app-blocked={appState.isBusy} aria-busy={appState.isBusy} inert={appState.isBusy}>
   <aside class="sidebar">
     <div class="brand">
       <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M7 26V6h12l7 7-7 7H13" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="m14 9 5 4-5 4" stroke="currentColor" stroke-width="2"/></svg>
-      <div><span class="wordmark">Plex<span>Suite</span></span><span class="brand-caption">MEDIA WORKSPACE</span></div>
+      <div><span class="wordmark">Plex<span>Suite</span></span><span class="brand-caption">PLEX TOOLKIT</span></div>
     </div>
-    <p class="nav-caption">WORKSPACE <span>04</span></p>
+    <p class="nav-caption">TOOLS <span>04</span></p>
     <nav class="tool-nav" aria-label="Tools">
       {#each tools.slice(0, 4) as tool}
         <button class:active-tab={appState.activeTab === tool.id} aria-current={appState.activeTab === tool.id ? "page" : undefined} onclick={() => navigate(tool.id)}>
@@ -60,14 +60,14 @@
 
   <main class="workspace" id="workspace">
     <header class="workspace-header">
-      <div><p class="eyebrow">{current.id === "settings" ? "APPLICATION" : "YOUR MEDIA, IN ORDER"}</p><h1>{current.title}</h1><p class="workspace-description">{current.description}</p></div>
+      <div><h1>{current.title}</h1><p class="workspace-description">{current.description}</p></div>
       <span class="workspace-symbol" aria-hidden="true"><ToolIcon name={current.id} /></span>
     </header>
     {#if current.steps.length}
       <ol class="workflow" aria-label="Workflow overview">{#each current.steps as step, index}<li><span>0{index + 1}</span>{step}</li>{/each}</ol>
     {/if}
     {#if current.id !== "settings" && (current.id === "plexmatch" ? !appState.tmdbKey.trim() : !appState.isConnected)}
-      <div class="connection-notice"><span><strong>Set up your workspace.</strong> {current.id === "plexmatch" ? "Add your TMDb API key in Settings to search for series." : "Connect your Plex server in Settings to load your libraries."}</span><button data-variant="ghost" onclick={() => navigate("settings")}>Open Settings <span aria-hidden="true">↗</span></button></div>
+      <div class="connection-notice"><span><strong>Connect your services.</strong> {current.id === "plexmatch" ? "Add your TMDb API key in Settings to search for series." : "Connect your Plex server in Settings to load your libraries."}</span><button data-variant="ghost" onclick={() => navigate("settings")}>Open Settings <span aria-hidden="true">↗</span></button></div>
     {/if}
     <div class="tool-content">
       {#if appState.activeTab === "trash"}<TrashTab />

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 32 32" fill="none">
+  <!-- Source for desktop icons and favicon. Match the panel and accent tokens in src/app.css. -->
+  <rect width="32" height="32" rx="6" fill="#1d1d1f"/>
+  <g stroke="#e5a52b" stroke-linejoin="round">
+    <path d="M7 26V6h12l7 7-7 7H13" stroke-width="3"/>
+    <path d="m14 9 5 4-5 4" stroke-width="2"/>
+  </g>
+</svg>
+

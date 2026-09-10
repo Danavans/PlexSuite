@@ -536,16 +536,16 @@
   .subs-file.dragging {
     opacity: 0.6;
     transform: scale(1.02);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--drag-shadow);
     z-index: 10;
   }
   .subs-file.drag-over {
-    border-color: var(--ok-green);
-    background: rgba(39, 241, 120, 0.1);
+    border-color: var(--success);
+    background: var(--success-surface);
   }
   .warn {
-    background-color: #f5a623;
-    box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.28);
+    background-color: var(--warning);
+    box-shadow: 0 0 0 2px var(--accent-border);
   }
   /* Ensure column alignment */
   .subs-row {

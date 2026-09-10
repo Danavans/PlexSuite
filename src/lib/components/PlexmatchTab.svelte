@@ -667,7 +667,7 @@
   <div class="panel lift-2">
     <h2><span class="step-number">02</span> Arrange your mapping</h2><p class="kicker">Selected episodes pair with files in order. Drag either column to adjust the mapping.</p>
     <div class="actions">
-      <button data-variant="mint" onclick={mapSelected}>
+      <button data-variant="accent" onclick={mapSelected}>
         Map selected
       </button>
       <button

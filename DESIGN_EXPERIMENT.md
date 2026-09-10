@@ -1,10 +1,10 @@
-# PlexSuite — Media workspace experiment
+# PlexSuite — Plex toolkit experiment
 
 Implemented on `experiment/rebrand`. This document describes the experimental UI; historical orange-theme layout notes in PROJECT_CONTEXT.md describe the stable design.
 
 ## Direction
 
-A compact media workbench: graphite surfaces, a muted mint identity, a geometric P mark, a persistent tool rail, and numbered workflow guides. Red is reserved for destructive actions. All UI text stays in English and every surface stays dark.
+A compact media workbench: graphite surfaces, a warm amber identity with distinct success green, a geometric P mark, a persistent tool rail, and numbered workflow guides. Red is reserved for destructive actions. All UI text stays in English and every surface stays dark.
 
 ## User experience
 
@@ -20,7 +20,7 @@ A compact media workbench: graphite surfaces, a muted mint identity, a geometric
 
 The frontend shell and shared CSS were replaced. Small `ToolIcon` and `EmptyState` components centralize visual presentation. There are no new dependencies or remote fonts.
 
-The five existing tool scripts are unchanged except for the EmptyState import. appState.svelte.js, Rust sources, HTTP behavior, persistence, Tauri window configuration and packaged icons are unchanged. The new logo is in-app only; PNG/ICO assets would need a separate asset pass for matching packaged branding. Portable packaging remains enabled through the existing no-installer configuration.
+The five existing tool scripts are unchanged except for the EmptyState import. The polish pass only adjusts copy, CSS tokens, spacing, an accent variant name, and icon assets. appState.svelte.js, Rust sources, HTTP behavior, persistence, Tauri window configuration are unchanged. Desktop PNG/ICO/ICNS assets and the browser favicon now match the geometric in-app logo. The editable source is static/app-icon.svg; its colors match the panel and accent tokens in src/app.css. To regenerate, run the Tauri icon command into a temporary directory and copy the existing desktop filenames into src-tauri/icons, plus 32x32.png to static/favicon.png. Portable packaging remains enabled through the existing no-installer configuration.
 
 ## Validation
 
@@ -31,3 +31,7 @@ The five existing tool scripts are unchanged except for the EmptyState import. a
 - Real Plex purge, upload and cleanup were not executed. Linux native rendering was not tested on this Windows host.
 
 Suggested commit: `feat(ui): redesign PlexSuite as a focused media workspace`
+
+## Theme polish
+
+The rail uses “Plex toolkit” and “Tools”; the extra header tagline is removed. Header and workflow margins are tighter without changing responsive breakpoints. Shared semantic tokens cover surfaces, text, accent interactions, success, danger, warning, focus, and overlays; SVG UI icons retain currentColor. View logs stays as a direct path from activity status to its details. No handlers, enablement rules, workflows, APIs, or Rust sources change.
