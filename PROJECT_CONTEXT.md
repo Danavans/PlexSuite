@@ -47,6 +47,8 @@
 
 ## Changelog
 
+- 2026-09-11: v1.3.0 added saved Plex server profiles with sidebar active-server selection and Settings Add/Edit/Delete management, independent Plex and TMDb Save/Test actions, safe operation-aware server switching and status handling, plus multi-server Settings polish and stable Session Activity scrolling.
+
 - 2026-09-10: Added global multi-server Plex profiles, safe legacy migration, independent Plex/TMDb save and test controls, sidebar selection, operation locking, and context invalidation.
 
 - 2026-09-10: v1.2.0 finalization: approved PlexSuite UI/UX rebrand with persistent sidebar/tool rail, graphite/amber identity, shared icon and empty-state presentation, responsive layout improvements, Activity/status presentation, refreshed application icons, Trash Selector episode identifiers, and final scrollbar/layout polish.
