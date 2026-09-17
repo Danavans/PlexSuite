@@ -1,0 +1,140 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      windows:
+        description: Windows portable EXE
+        type: boolean
+        default: true
+      linux_binary:
+        description: Linux native binary
+        type: boolean
+        default: true
+      linux_appimage:
+        description: Linux AppImage
+        type: boolean
+        default: false
+      linux_deb:
+        description: Linux DEB
+        type: boolean
+        default: false
+      macos_dmg:
+        description: macOS DMG (unsigned)
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      windows:
+        type: boolean
+        default: false
+      linux_binary:
+        type: boolean
+        default: false
+      linux_appimage:
+        type: boolean
+        default: false
+      linux_deb:
+        type: boolean
+        default: false
+      macos_dmg:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    if: inputs.windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npm run tauri build -- --no-bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PlexSuite-windows-portable
+          path: src-tauri/target/release/plex_suite.exe
+          if-no-files-found: error
+
+  linux:
+    if: inputs.linux_binary || inputs.linux_appimage || inputs.linux_deb
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Tauri dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libxdo-dev patchelf libfuse2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npm run tauri build -- --no-bundle
+      - name: Package selected bundles
+        if: inputs.linux_appimage || inputs.linux_deb
+        env:
+          APPIMAGE: ${{ inputs.linux_appimage }}
+          DEB: ${{ inputs.linux_deb }}
+        run: |
+          bundles=()
+          if [[ "$APPIMAGE" == true ]]; then bundles+=(appimage); fi
+          if [[ "$DEB" == true ]]; then bundles+=(deb); fi
+          IFS=,; npm run tauri bundle -- --bundles "${bundles[*]}" --no-sign
+      - name: Archive native binary
+        if: inputs.linux_binary
+        run: zip -j PlexSuite-linux-x86_64.zip src-tauri/target/release/plex_suite
+      - uses: actions/upload-artifact@v4
+        if: inputs.linux_binary
+        with:
+          name: PlexSuite-linux-binary
+          path: PlexSuite-linux-x86_64.zip
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: inputs.linux_appimage
+        with:
+          name: PlexSuite-linux-appimage
+          path: src-tauri/target/release/bundle/appimage/*.AppImage
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: inputs.linux_deb
+        with:
+          name: PlexSuite-linux-deb
+          path: src-tauri/target/release/bundle/deb/*.deb
+          if-no-files-found: error
+
+  macos:
+    if: inputs.macos_dmg
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npm run tauri build -- --no-bundle
+      - run: npm run tauri bundle -- --bundles dmg --config '{"bundle":{"icon":["icons/icon.icns"]}}' --no-sign
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PlexSuite-macos-dmg
+          path: src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: error
