@@ -201,13 +201,13 @@ Built with **Tauri 2**, **Rust**, **SvelteKit**, **Svelte 5**, and **Vite**.
 
 ## Development note
 
-PlexSuite was built through AI-assisted "vibe coding". I'm not a professional software developer; the app was created by defining the features, testing them in real use, and iterating with AI coding tools.
+Symlink Manager was developed with AI-assisted coding tools as part of an iterative workflow combining feature design, testing, debugging, and real-world use.
 
 Bug reports and feedback are welcome.
 
 ## License
 
-PlexSuite is released under the **MIT License**.
+MIT © 2026 Danavans. See [LICENSE](LICENSE).
 
 ## Disclaimer
 
